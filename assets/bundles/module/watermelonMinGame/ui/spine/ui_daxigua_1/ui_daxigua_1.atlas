@@ -1,0 +1,27 @@
+
+ui_daxigua_1.png
+size: 256, 256
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+huan
+  rotate: false
+  xy: 2, 2
+  size: 114, 114
+  orig: 128, 128
+  offset: 7, 7
+  index: -1
+xx
+  rotate: false
+  xy: 118, 84
+  size: 23, 32
+  orig: 25, 32
+  offset: 1, 0
+  index: -1
+y1
+  rotate: false
+  xy: 2, 118
+  size: 116, 121
+  orig: 128, 128
+  offset: 4, 1
+  index: -1

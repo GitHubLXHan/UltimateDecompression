@@ -1,0 +1,41 @@
+
+ui_tiaozhanchenggong_01.png
+size: 1024, 1024
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+chongwu
+  rotate: false
+  xy: 664, 289
+  size: 341, 382
+  orig: 720, 1280
+  offset: 203, 758
+  index: -1
+guangyun
+  rotate: true
+  xy: 2, 246
+  size: 567, 508
+  orig: 720, 1280
+  offset: 86, 382
+  index: -1
+yuanquan
+  rotate: true
+  xy: 708, 673
+  size: 338, 303
+  orig: 720, 1280
+  offset: 182, 674
+  index: -1
+zhengduandai
+  rotate: false
+  xy: 2, 815
+  size: 704, 196
+  orig: 720, 1280
+  offset: 6, 679
+  index: -1
+zi
+  rotate: true
+  xy: 512, 318
+  size: 495, 150
+  orig: 720, 1280
+  offset: 115, 723
+  index: -1

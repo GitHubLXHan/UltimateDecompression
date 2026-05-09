@@ -1,0 +1,19 @@
+{
+    "AgentCode": "test",
+    "AgentKey": "test",
+    "AgentName": "内网-卡图",
+    "CodeVersion": "1.0.0.0",
+    "HttpSerever": "http://192.168.6.130:4402/sy_api/game_api.php",
+    "HttpUnitServer": "http://192.168.6.130:4402/sy_api",
+    "IsDebug": true,
+    "JSVer": 1626766301,
+    "ProjectName": "binghuhw",
+    "RemoteResHost": "http://192.168.6.130:7070/binghu_web/oversea_latest_global",
+    "VersionTime": "20210720 15:31:46",
+    "appLink": "",
+    "gameUrl": "",
+    "htmlName": "内网卡图",  
+    "isHttps": false,    
+    "version": "0.0.0",
+    "thirdUserSystem": 0
+}

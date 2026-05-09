@@ -1,0 +1,86 @@
+[
+    {
+        "type": 1,
+        "name": "Node",
+        "uuid": "",
+        "submenu": [],
+        "command": "cc-ext-scene-menu:add-node-with-component"
+    },
+    {
+        "type": 1,
+        "name": "GameSprite",
+        "uuid": "GameSprite",
+        "submenu": [],
+        "command": "cc-ext-scene-menu:add-node-with-component"
+    },
+    {
+        "type": 1,
+        "name": "GameLabel",
+        "uuid": "GameLabel",
+        "submenu": [],
+        "command": "cc-ext-scene-menu:add-node-with-component"
+    },
+    {
+        "type": 2,
+        "name": "ColorBtn",
+        "uuid": "84hmpDwHFK+bFtsv7njLBh",
+        "submenu": [],
+        "command": "cc-ext-scene-menu:add-prefab"
+    },
+
+    {
+        "type": 2,
+        "name": "iconButton",
+        "uuid": "8bTxXDhCZAVJei7sgBZ/KP",
+        "submenu": [],
+        "command": "cc-ext-scene-menu:add-prefab"
+    },
+
+
+
+
+
+
+    {
+        "desc":"以下为原插件代码 留着备用",
+        "type": 0,
+        "name": "Edit Menu",
+        "uuid": "暂时不需要这个快捷键",
+        "submenu": [],
+        "command": "cc-ext-scene-menu:custom-context-menu"
+    },
+    {
+        "type": 0,
+        "name": "Create Node",
+        "uuid": "",
+        "submenu": [
+            {
+                "type": "0",
+                "name": "Empty Node",
+                "uuid": "",
+                "submenu": []
+            },
+            {
+                "type": "0",
+                "name": "Your Prefab 1",
+                "uuid": "32BEvSSB9M8aZW4rL7FZTr",
+                "submenu": []
+            },
+            {
+                "type": "0",
+                "name": "Your Prefab 2",
+                "uuid": "",
+                "submenu": []
+            }
+        ],
+        "command": ""
+    },
+    {
+        "type": 0,
+        "name": "Say Hello",
+        "uuid": "",
+        "submenu": [],
+        "command": "cc-ext-scene-menu:say-hello",
+        "param": "{\"a\":1, \"b\":2}"
+    }
+]

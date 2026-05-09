@@ -1,0 +1,7 @@
+[
+  { "ball_id": 1, "hp": 1, "max_collision": 6, "icon": "watermelonMinGame/ui/auto/ssy_img_lanmei" },
+  { "ball_id": 2, "hp": 2, "max_collision": 6, "icon": "watermelonMinGame/ui/auto/ssy_img_ningmeng" },
+  { "ball_id": 3, "hp": 3, "max_collision": 6, "icon": "watermelonMinGame/ui/auto/ssy_img_huangtao" },
+  { "ball_id": 4, "hp": 4, "max_collision": 6, "icon": "watermelonMinGame/ui/auto/ssy_img_xigua" },
+  { "ball_id": 5, "hp": 5, "max_collision": 6, "icon": "watermelonMinGame/ui/auto/ssy_img_daxigua" }
+]

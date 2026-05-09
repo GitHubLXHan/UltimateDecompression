@@ -1,0 +1,9 @@
+{
+	"scriptPath": "custom-build-scripts/custom-build.js",
+	"subProjConfig": {},
+	"version": "2.1.7",
+	"extResPlatformBuildSetting": {
+		"android": true,
+		"ios": true
+	}
+}

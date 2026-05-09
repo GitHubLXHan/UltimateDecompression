@@ -1,0 +1,8 @@
+[
+  { "buy_count": 1, "cost": 10, "ball_id": 1 },
+  { "buy_count": 2, "cost": 15, "ball_id": 1 },
+  { "buy_count": 3, "cost": 20, "ball_id": 2 },
+  { "buy_count": 4, "cost": 25, "ball_id": 2 },
+  { "buy_count": 5, "cost": 30, "ball_id": 3 },
+  { "buy_count": 6, "cost": 35, "ball_id": 3 }
+]

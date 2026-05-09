@@ -1,0 +1,38 @@
+{
+  "ver": "2.3.7",
+  "uuid": "4739fcea-c713-4b5c-84c2-0290f247b79d",
+  "importer": "texture",
+  "type": "sprite",
+  "wrapMode": "clamp",
+  "filterMode": "bilinear",
+  "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "width": 54,
+  "height": 54,
+  "platformSettings": {},
+  "subMetas": {
+    "common_btn_libaoma": {
+      "ver": "1.0.6",
+      "uuid": "a251c4cf-fc4e-46f6-ad1e-11f2fabe255e",
+      "importer": "sprite-frame",
+      "rawTextureUuid": "4739fcea-c713-4b5c-84c2-0290f247b79d",
+      "trimType": "auto",
+      "trimThreshold": 1,
+      "rotated": false,
+      "offsetX": -0.5,
+      "offsetY": 0.5,
+      "trimX": 8,
+      "trimY": 7,
+      "width": 37,
+      "height": 39,
+      "rawWidth": 54,
+      "rawHeight": 54,
+      "borderTop": 0,
+      "borderBottom": 0,
+      "borderLeft": 0,
+      "borderRight": 0,
+      "subMetas": {}
+    }
+  }
+}

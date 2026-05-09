@@ -1,0 +1,38 @@
+{
+  "ver": "2.3.7",
+  "uuid": "6b605bb7-b689-4298-ace0-79b096310493",
+  "importer": "texture",
+  "type": "sprite",
+  "wrapMode": "clamp",
+  "filterMode": "bilinear",
+  "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "width": 97,
+  "height": 95,
+  "platformSettings": {},
+  "subMetas": {
+    "common_icon_beibao": {
+      "ver": "1.0.6",
+      "uuid": "0cb6ed22-7381-40cd-9d23-9814f7bcd2ed",
+      "importer": "sprite-frame",
+      "rawTextureUuid": "6b605bb7-b689-4298-ace0-79b096310493",
+      "trimType": "auto",
+      "trimThreshold": 1,
+      "rotated": false,
+      "offsetX": -1,
+      "offsetY": 0.5,
+      "trimX": 6,
+      "trimY": 1,
+      "width": 83,
+      "height": 92,
+      "rawWidth": 97,
+      "rawHeight": 95,
+      "borderTop": 0,
+      "borderBottom": 0,
+      "borderLeft": 0,
+      "borderRight": 0,
+      "subMetas": {}
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "name": "aswallow",
+  "version": "2.1.7",
+  "description": "The package ",
+  "author": "AILHC",
+  "main": "dist/main.js",
+  "main-menu": {
+    "i18n:MAIN_MENU.package.title/i18n:aswallow.title/i18n:aswallow.help": {
+      "message": "aswallow:help"
+    },
+    "i18n:MAIN_MENU.package.title/i18n:aswallow.title/i18n:aswallow.updateClientDts": {
+      "message": "aswallow:updateClientDts"
+    },
+    "i18n:MAIN_MENU.package.title/i18n:aswallow.title/i18n:aswallow.revertAswallowConfig": {
+      "message": "aswallow:revertAswallowConfig"
+    },
+    "i18n:MAIN_MENU.package.title/i18n:aswallow.title/i18n:aswallow.buildSubProjs": {
+      "message": "aswallow:buildSubProjs"
+    },
+    "i18n:MAIN_MENU.package.title/i18n:aswallow.title/i18n:aswallow.testFunc": {
+      "message": "aswallow:testFunc"
+    },
+    "i18n:MAIN_MENU.package.title/i18n:aswallow.title/i18n:aswallow.resetPreviewServer": {
+      "message": "aswallow:resetPreviewServer"
+    }
+  },
+  "reload": {
+    "ignore": [],
+    "main": [
+      "dist/main.js"
+    ]
+  },
+  "scripts": {
+    "dev": "egf build -w -ngd -f cjs -c",
+    "build": "egf build -f cjs -m -ngd -c -s",
+    "publish-pkg": "gulp"
+  },
+  "dependencies": {
+    "@types/fs-extra": "^9.0.11",
+    "fast-glob": "^3.2.7",
+    "fs-extra": "^10.0.0"
+  },
+  "devDependencies": {
+    "@ailhc/egf-cli": "^3.0.9",
+    "compressing": "^1.5.1",
+    "execa": "^5.0.0",
+    "gulp": "^4.0.2",
+    "gulp-clean": "^0.4.0"
+  },
+  "_storeId": "864e5e7aa144bfc0fdfc4f6823eb645b"
+}

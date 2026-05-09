@@ -1,0 +1,43 @@
+{
+  "name": "ccc-quick-add-component",
+  "version": "1.0.3.20210522",
+  "description": "快速搜索并添加组件到节点上",
+  "main": "main.js",
+  "scene-script": "scene.js",
+  "main-menu": {
+    "i18n:MAIN_MENU.package.title/i18n:ccc-quick-add-component.name/i18n:ccc-quick-add-component.search": {
+      "message": "ccc-quick-add-component:open-search-panel",
+      "icon": "/images/search.png",
+      "accelerator": "F3"
+    },
+    "i18n:MAIN_MENU.package.title/i18n:ccc-quick-add-component.name/i18n:ccc-quick-add-component.setting": {
+      "message": "ccc-quick-add-component:open-setting-panel",
+      "icon": "/images/setting.png"
+    },
+    "i18n:MAIN_MENU.package.title/i18n:ccc-quick-add-component.name/i18n:ccc-quick-add-component.searchAssets": {
+      "message": "ccc-quick-add-component:assets-search",
+      "icon": "/images/search.png",
+      "accelerator": "cmd+f"
+    },
+    "i18n:MAIN_MENU.package.title/i18n:ccc-quick-add-component.name/i18n:ccc-quick-add-component.getNodeData": {
+      "message": "ccc-quick-add-component:get-node-data",
+      "icon": "/images/search.png",
+      "accelerator": "F5"
+    }
+  },
+  "panel.setting": {
+    "main": "panel.setting/index.js",
+    "type": "fixed-size",
+    "title": "i18n:ccc-quick-add-component.name",
+    "width": 550,
+    "height": 343
+  },
+  "reload": {
+    "renderer": [
+      "panel.setting/*"
+    ],
+    "ignore": [
+      "search/*"
+    ]
+  }
+}
