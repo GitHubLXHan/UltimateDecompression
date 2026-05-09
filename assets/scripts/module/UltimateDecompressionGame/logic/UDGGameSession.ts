@@ -674,7 +674,12 @@ export class UDGGameSession {
     }
 
     private updateCameraFollow(): void {
-        const stage = this.getPlayParent();
+        // 直接跟随“球真实挂载的父节点”，避免 stage_root 引用偏差导致镜头在动、球不动。
+        const runtime_parent =
+            this._balls.length > 0 && this._balls[0] && this._balls[0].node && this._balls[0].node.isValid
+                ? this._balls[0].node.parent
+                : undefined;
+        const stage = runtime_parent && runtime_parent.isValid ? runtime_parent : this.getPlayParent();
         const container = this.resolveContainerNode(stage);
         if (!stage || !container || !stage.isValid || !container.isValid) {
             return;
@@ -683,28 +688,32 @@ export class UDGGameSession {
             return;
         }
         const ch = container.height;
-        let min_bottom_world = Infinity;
+        // 用容器局部坐标：锚点 (0.5,1) 时顶为 0、向下为负，避免 world rect 的 y 语义搞错导致 thW 几千才触发。
+        let min_bottom_local = Infinity;
         for (let i = 0; i < this._balls.length; i += 1) {
             const n = this._balls[i].node;
             if (!n || !n.isValid) {
                 continue;
             }
             const wbox = n.getBoundingBoxToWorld();
-            min_bottom_world = Math.min(min_bottom_world, wbox.y);
+            const bottom_world = cc.v2(wbox.x + wbox.width * 0.5, wbox.y);
+            const lp = container.convertToNodeSpaceAR(bottom_world);
+            min_bottom_local = Math.min(min_bottom_local, lp.y);
         }
-        if (!isFinite(min_bottom_world)) {
+        if (!isFinite(min_bottom_local)) {
             return;
         }
-        const container_world_rect = container.getBoundingBoxToWorld();
-        // 触发线放到可视区中下部，避免“快到底才跟一下”。
-        const threshold_world = container_world_rect.y + container_world_rect.height * 0.62;
+        // scene_height 很大时，容器高度会非常高；跟随阈值需钳制到可视体验范围，避免“几千像素后才开始跟随”。
+        const follow_depth = Math.min(1400, Math.max(520, ch * 0.62));
+        const threshold_local = -follow_depth;
         let target_stage_y = stage.y;
-        if (min_bottom_world < threshold_world) {
-            const delta = threshold_world - min_bottom_world;
-            const max_step = 220;
+        if (min_bottom_local < threshold_local) {
+            const delta = threshold_local - min_bottom_local;
+            const max_step = 180;
             target_stage_y = stage.y + cc.misc.clampf(delta, 0, max_step);
         }
-        const y_max = Math.max(ch * 6, ch + 6000);
+        // 镜头上限也做软钳制，防止异常配置下追到极端大值。
+        const y_max = Math.min(9000, Math.max(2600, ch + 2600));
         const clamped = cc.misc.clampf(target_stage_y, 0, y_max);
         const follow_lerp = 0.45;
         this._stage_follow_y += (clamped - this._stage_follow_y) * follow_lerp;
@@ -712,7 +721,7 @@ export class UDGGameSession {
             this._stage_follow_y = clamped;
         }
         stage.y = this._stage_follow_y;
-        this.maybeDebugFollow(min_bottom_world, threshold_world, target_stage_y, clamped, stage.y);
+        this.maybeDebugFollow(min_bottom_local, threshold_local, target_stage_y, clamped, stage.y);
     }
 
     private resolveContainerNode(stage?: cc.Node): cc.Node {
@@ -724,8 +733,8 @@ export class UDGGameSession {
     }
 
     private maybeDebugFollow(
-        min_bottom_world: number,
-        threshold: number,
+        min_bottom_local: number,
+        threshold_local: number,
         target_stage_y: number,
         clamped: number,
         stage_y: number
@@ -736,7 +745,7 @@ export class UDGGameSession {
         }
         this._debug_last_flush_ts = now;
         this.pushDebugLog(
-            `follow t=${this._elapsed.toFixed(2)} balls=${this._balls.length} minW=${min_bottom_world.toFixed(1)} thW=${threshold.toFixed(
+            `follow t=${this._elapsed.toFixed(2)} balls=${this._balls.length} minL=${min_bottom_local.toFixed(1)} thL=${threshold_local.toFixed(
                 1
             )} target=${target_stage_y.toFixed(1)} clamp=${clamped.toFixed(1)} stageY=${stage_y.toFixed(1)}`
         );

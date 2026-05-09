@@ -2,7 +2,7 @@
   {
     "level_id": 1,
     "level_num": 1,
-    "scene_height": 18,
+    "scene_height": 118,
     "pool_multiple": [1, 1.5, 2, 3],
     "block_list": [
       [3, 0, 101],
