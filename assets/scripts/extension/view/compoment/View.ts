@@ -25,7 +25,7 @@ export abstract class View extends BaseLog {
 	private _isPlayAnimation = false;
 	private _resBase!: ResBase;
 	private _name: string = "";
-	private _skinName: string = "";
+	private _prefabPath: string = "";
 	private _bundleName: string = "resources"; //默认在resource里面
 	private _root!: cc.Node;
 
@@ -78,7 +78,7 @@ export abstract class View extends BaseLog {
 	 * @param loadDoneCB 是否播放打开动画
 	 */
 	public loadSkin(args: any[], callback: (name: string, error?: boolean) => void, isPlayAnimation: boolean, loadDoneCB?: (name: string) => void) {
-		if (this.skinName == null || this.skinName.length <= 0) {
+		if (this.prefabPath == null || this.prefabPath.length <= 0) {
 			console.warn("未指明skinName", this._name);
 			return;
 		}
@@ -97,10 +97,10 @@ export abstract class View extends BaseLog {
 			return;
 		}
 
-		this._loadId = resource.ResourceManager.sInstance.load(this.skinName, cc.Prefab, (err: Error, prefab: cc.Prefab) => {
+		this._loadId = resource.ResourceManager.sInstance.load(this.prefabPath, cc.Prefab, (err: Error, prefab: cc.Prefab) => {
 			this._loadId = 0;
 			if (err != null) {
-				this.logError("View加载失败:", this.skinName);
+				this.logError("View加载失败:", this.prefabPath);
 				this._loadId = -1;
 				callback(this.name, true);
 				return;
@@ -301,11 +301,11 @@ export abstract class View extends BaseLog {
 	/**
 	 * @description: 预制件名称
 	 */
-	protected get skinName(): string {
-		return this._skinName;
+	protected get prefabPath(): string {
+		return this._prefabPath;
 	}
-	protected set skinName(value: string) {
-		this._skinName = value;
+	protected set prefabPath(value: string) {
+		this._prefabPath = value;
 	}
 
 	/**

@@ -41,7 +41,7 @@ export class WatermelonMinGameEndView extends BaseView {
 
     public constructor() {
         super();
-        this.skinName = "watermelonMinGame/prefabs/watermelonMinGameEndView";
+        this.prefabPath = "watermelonMinGame/prefabs/watermelonMinGameEndView";
         this.ignoreWidgetTopAdjust = true;
         this.ignoreWidgetBottomAdjust = true;
     }

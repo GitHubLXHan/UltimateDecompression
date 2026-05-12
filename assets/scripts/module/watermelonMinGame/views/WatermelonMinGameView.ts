@@ -77,7 +77,7 @@ export class WatermelonMinGameView extends BaseView {
 
     public constructor() {
         super();
-        this.skinName = "watermelonMinGame/prefabs/watermelonMinGameView";
+        this.prefabPath = "watermelonMinGame/prefabs/watermelonMinGameView";
     }
 
     public init(root: cc.Node): void {

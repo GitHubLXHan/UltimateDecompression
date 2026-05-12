@@ -17,7 +17,7 @@ export class PopMsgView extends BasePopView {
 
 	public constructor() {
 		super();
-		this.skinName = "login/prefabs/view/popMsgView";
+		this.prefabPath = "login/prefabs/view/popMsgView";
 	}
 
 	public init(root: cc.Node) {
