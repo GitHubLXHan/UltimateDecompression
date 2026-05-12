@@ -1,7 +1,3 @@
-/**
- * @description: 
- * @author: Zeros
- */
 export enum UIEventType {
     Open,
     Close,

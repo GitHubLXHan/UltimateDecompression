@@ -1,0 +1,292 @@
+
+CCEffect %{
+  techniques:
+  - passes:
+    - vert: vs
+      frag: fs4
+      blendState:
+        targets:
+        - blend: true
+      rasterizerState:
+        cullMode: none
+      properties:
+        texture: { value: white }
+        duration: {  value: 1.0 }
+        outlingSize: {  value: 0.005}
+        outlingRate: {  value: 0.06}
+        percentA: {  value: 0.5 }
+        percentB: {  value: 1 }
+        rainbow: {  value: 0 }
+        outlightColor: { value: [1, 0.8, 0, 1], editor: { type: color, tooltip: "颜色" }}
+    - vert: vs
+      frag: fs
+      blendState:
+        targets:
+        - blend: true
+      rasterizerState:
+        cullMode: none
+      properties:
+        texture: { value: white }
+        alphaThreshold: { value: 0.5 }
+}%
+
+CCProgram vs %{
+
+  precision highp float;
+
+  #include <cc-global>
+  #include <cc-local>
+
+  in vec3 a_position;
+  in vec4 a_color;
+  #if USE_TINT
+    in vec4 a_color0;
+  #endif
+
+  in vec2 a_uv0;
+  out vec2 v_uv0;
+
+  out vec4 v_light;
+  #if USE_TINT
+    out vec4 v_dark;
+  #endif
+
+  void main () {
+    mat4 mvp;
+    
+    #if CC_USE_MODEL
+      mvp = cc_matViewProj * cc_matWorld;
+    #else
+      mvp = cc_matViewProj;
+    #endif
+
+    v_uv0 = a_uv0;
+
+    v_light = a_color;
+    #if USE_TINT
+      v_dark = a_color0;
+    #endif
+
+    gl_Position = mvp * vec4(a_position, 1);
+}
+
+}%
+
+CCProgram fs4 %{
+  precision highp float;
+
+  #include <cc-global>
+  #include <cc-local>
+
+  #define PI 3.141592653589793
+  
+  #define color1 vec3(1.0,0.0,0.0)
+  #define color2 vec3(1.0,0.64705882,0.0)
+  #define color3 vec3(1.0,1.0,0.0)
+  #define color4 vec3(0.0,1.0,0.0)
+  #define color5 vec3(0.0,0.49803922,1.0)
+  #define color6 vec3(0.0,0.0,1.0)
+  #define color7 vec3(0.54509804,0.0,1.0)
+
+  #define PI_2_7_1 0.2243994752564138
+  #define PI_2_7_2 0.4487989505128276
+  #define PI_2_7_3 0.6731984257692414
+  #define PI_2_7_4 0.8975979010256552
+  #define PI_2_7_5 1.121997376282069
+  #define PI_2_7_6 1.3463968515384828
+  #define PI_2_7_7 1.5707963267948966
+
+
+
+
+
+
+  in vec2 v_uv0;
+  in vec4 v_color;
+
+  uniform sampler2D texture;
+  
+  uniform outlight {
+    float duration;
+    float percentA;
+    float percentB;
+    float outlingRate;
+    float outlingSize;
+    float rainbow; //彩虹色 大于0.5为TRUE
+  };
+
+  uniform OutlightColor {
+    vec4 outlightColor;
+  };
+
+  float power = 1.6;
+
+  void main()
+  {
+    float aSum = 0.0;
+    vec2 _uv;
+    vec2 _uv0 = v_uv0; 
+    float p = percentA + (percentB - percentA) * (sin(cc_time.x * (1.0 / duration) * PI ) + 1.0) * 0.5;
+    for(float i = -5.0; i < 5.0; i++){
+      for(float j = -5.0; j < 5.0; j++){
+        _uv = _uv0 + vec2(outlingSize * i, outlingSize * j);
+        vec4 color = texture2D(texture, _uv);
+        float k = (pow(i, 2.0) + pow(j, 2.0)) / 25.0;
+        k = min(k, 1.0);
+        aSum += color.a  * (1.0 - k)* outlingRate * p;
+      }
+    }
+    if(rainbow < 0.5){
+      vec4 col = outlightColor * aSum;
+      gl_FragColor = col;
+      return;
+    }
+
+
+    float _angle = 0.0;
+    if(_uv0.x != 0.5){
+      _angle = atan((_uv0.y-0.5)/(_uv0.x-0.5));  //-PI/2 - PI/2
+    }
+    float dt = 10.0*cc_time.x;
+    if(dt > 7.0){
+      dt = mod(dt, 7.0);
+    }
+    _angle = _angle + dt*PI_2_7_1;
+    if(_angle > PI_2_7_7){
+      _angle = _angle - PI_2_7_7;
+    }
+    vec3 beginColor = vec3(0,0,0);
+    vec3 endColor = vec3(1,1,1);
+    float beginRange = 0.0;
+    float endRange = 0.0;
+    if(_angle<0.0) {
+      if(_angle > -PI_2_7_3){
+        if(_angle > -PI_2_7_1){
+          beginColor = color7;
+          endColor = color1;
+          beginRange = -PI_2_7_1;
+          endRange = 0.0;
+        }else if(_angle > -PI_2_7_2){
+          beginColor = color6;
+          endColor = color7;
+          beginRange = -PI_2_7_2;
+          endRange = -PI_2_7_1;
+        }else {
+          beginColor = color5;
+          endColor = color6;
+          beginRange = -PI_2_7_3;
+          endRange = -PI_2_7_2;
+        }
+      }else {
+        if(_angle > -PI_2_7_4){
+          beginColor = color4;
+          endColor = color5;
+          beginRange = -PI_2_7_4;
+          endRange = -PI_2_7_3;
+        }else if(_angle > -PI_2_7_5){
+          beginColor = color3;
+          endColor = color4;
+          beginRange = -PI_2_7_5;
+          endRange = -PI_2_7_4;
+        }else if(_angle > -PI_2_7_6){
+          beginColor = color2;
+          endColor = color3;
+          beginRange = -PI_2_7_6;
+          endRange = -PI_2_7_5;
+        }else {
+          beginColor = color1;
+          endColor = color2;
+          beginRange = -PI_2_7_7;
+          endRange = -PI_2_7_6;
+        }
+      }
+    }else{
+      if(_angle < PI_2_7_3){
+        if(_angle < PI_2_7_1){
+          beginColor = color1;
+          endColor = color2;
+          beginRange = 0.0;
+          endRange = PI_2_7_1;
+        }else if(_angle < PI_2_7_2){
+          beginColor = color2;
+          endColor = color3;
+          beginRange = PI_2_7_1;
+          endRange = PI_2_7_2;
+        }else {
+          beginColor = color3;
+          endColor = color4;
+          beginRange = PI_2_7_2;
+          endRange = PI_2_7_3;
+        }
+      }else { 
+        if(_angle < PI_2_7_4){
+          beginColor = color4;
+          endColor = color5;
+          beginRange = PI_2_7_3;
+          endRange = PI_2_7_4;
+        }else if(_angle < PI_2_7_5){
+          beginColor = color5;
+          endColor = color6;
+          beginRange = PI_2_7_4;
+          endRange = PI_2_7_5;
+        }else if(_angle < PI_2_7_6){
+          beginColor = color6;
+          endColor = color7;
+          beginRange = PI_2_7_5;
+          endRange = PI_2_7_6;
+        }else {
+          beginColor = color7;
+          endColor = color1;
+          beginRange = PI_2_7_6;
+          endRange = PI_2_7_7;  //这个大约是87度的tan
+        }
+      }
+    }
+ 
+    float percent = 0.0;
+    percent = (_angle - beginRange)/(endRange - beginRange);
+   
+    percent= percent+cc_time.y;
+    beginColor.x = mix(beginColor.x, endColor.x, percent);
+    beginColor.y = mix(beginColor.y, endColor.y, percent);
+    beginColor.z = mix(beginColor.z, endColor.z, percent);
+
+    vec4 col = vec4(beginColor.x, beginColor.y, beginColor.z, 1.0*aSum);
+    gl_FragColor = col;
+  }
+}%
+
+
+CCProgram fs %{
+
+  precision highp float;
+
+  uniform sampler2D texture;
+  in vec2 v_uv0;
+
+  in vec4 v_light;
+  #if USE_TINT
+    in vec4 v_dark;
+  #endif
+
+  #include <alpha-test>
+  #include <texture>
+
+  void main () {
+    vec4 texColor = vec4(1.0);
+    CCTexture(texture, v_uv0, texColor);
+    vec4 finalColor;
+
+    #if USE_TINT
+      finalColor.a = v_light.a * texColor.a;
+      finalColor.rgb = ((texColor.a - 1.0) * v_dark.a + 1.0 - texColor.rgb) * v_dark.rgb + texColor.rgb * v_light.rgb;
+    #else
+      finalColor = texColor * v_light;
+    #endif
+
+    ALPHA_TEST(finalColor);
+
+    gl_FragColor = finalColor;
+  }
+
+}%

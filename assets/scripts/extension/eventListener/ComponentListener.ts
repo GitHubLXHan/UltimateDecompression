@@ -6,10 +6,6 @@ import { PoolMgr } from "../pool/PoolMgr";
 import { LogMgr } from "../log/LogMgr";
 import { BaseComponent } from "../components/BaseComponent";
 
-/**
- * @description:
- * @author: Zeros
- */
 export abstract class ComponentListener<T extends string | number, Listener> extends BaseComponent implements IListener<T, Listener> {
 	private _eventStore: Dictionary<T, List<ListenerHandlerVo>> = new Dictionary<T, List<ListenerHandlerVo>>();
 

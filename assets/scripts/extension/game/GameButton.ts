@@ -1,12 +1,3 @@
-/*
- * @Author: yf
- * @Date: 2021-07-23 13:56:33
- * @LastEditTime: 2022-11-08 14:22:46
- * @LastEditors: yf
- * @Description: In User Settings Edit
- * @FilePath: /client_v2_4/assets/scripts/module/common/component/GameSpine.ts
- */
-
 import { AudioMgr } from "../audio/AudioMgr";
 import { BtnEventType } from "../components/GameBtn/BtnEventType";
 import { GrayEffect } from "../components/GrayEffect";

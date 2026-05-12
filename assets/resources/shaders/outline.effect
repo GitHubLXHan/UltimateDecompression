@@ -1,0 +1,115 @@
+CCEffect %{
+  techniques:
+  - passes:
+    - vert: vs
+      frag: fs
+      blendState:
+        targets:
+        - blend: true
+      rasterizerState:
+        cullMode: none
+      properties:
+        texture: { value: white }
+        originTexture: { value: white }
+}%
+
+CCProgram vs %{
+  precision highp float;
+
+  #include <cc-global>
+  #include <cc-local>
+
+  in vec3 a_position;
+  in vec4 a_color;
+  out vec4 v_color;
+
+  in vec2 a_uv0;
+  out vec2 v_uv0;
+  
+  void main() {
+    vec4 pos = vec4(a_position, 1);
+    pos = cc_matViewProj * pos;
+    v_uv0 = a_uv0;
+
+    v_color = a_color;
+    gl_Position = pos;
+  }
+}%
+
+CCProgram fs %{
+  precision highp float;
+
+  #include <cc-global>
+  #include <cc-local>
+  // #include <sdf>
+
+  #define PI 3.141592653589793
+  
+  in vec4 v_color;
+  in vec2 v_uv0;
+  in vec2 v_uv1;
+
+  uniform sampler2D texture;
+  uniform sampler2D originTexture;
+
+  float Remap01(float a, float b, float t) {
+    return (t-a) / (b-a);
+  }
+
+  float Remap(float a, float b, float c, float d, float t) {
+    return Remap01(a, b, t) * (d-c) + c;
+  }
+
+  // 脉冲函数
+  // X,Y区间都是[0,1]，X=0.5位置Y=1
+  // https://www.iquilezles.org/www/articles/functions/functions.htm
+  float Pulse(float x) {
+    return pow(4.0 * x * (1.0 - x), 16.0);
+  }
+
+  void main()
+  {    
+  //   vec2 uv = vec2(v_uv0.x, 1.0-v_uv0.y);
+  //   // vec2 uv = v_uv0.xy;
+  //   // vec4 col = texture(texture, uv) * v_color;
+  //   float D = GetD(texture, uv);
+  //   D = D * maxDist.y * 0.5 + 0.5;
+
+  //   float alpha = D;
+  //   // float alpha = GetAlpha(texture, uv);
+    
+  //   // 轮廓宽度(0.0, 1.0), 对应alpha区域
+  //   // float outlineWidth = 0.45;
+  //   float offset = Remap(-1., 1., 0., 0.2, sin(cc_time.x * 2.0 * PI + uv.y * 3.0));
+  //   float outlineWidth = 0.3 + offset * (uv.y);
+
+  //   // 选择一个alpha值做为轮廓的中线
+  //   float centerAlpha = 0.5;
+
+  //   float alphaDist = abs(alpha - centerAlpha);
+  //   float mask = smoothstep(outlineWidth, 0., alphaDist);
+
+  //   // 外发光颜色
+  //   vec4 outlineColor = vec4(1., 0.5, 0., mask);
+    
+  //   // 底色基础上叠加一个亮度，叠加后中心位置变白
+  //   float brightness = 0.3;
+  //   outlineColor.rgb += clamp(Pulse((alphaDist + 0.5)) * brightness, 0., 1.);
+
+  //   // 原图的轮廓alpha平滑处理。originTexture的尺寸和SDF Texture不匹配，这里需要进行缩放
+  //   // Texture2D和RenderTexture Y倒置
+  //   vec2 uv2 = vec2(uv.x, 1.0-uv.y);
+
+  //   // 对uv2进行缩放，模拟Distance Texture扩边
+  //   vec2 ratio = texSize.xy / (texSize.xy - vec2(maxDist.x * 2.));
+  //   uv2 = uv2 - 0.5;
+  //   uv2 *= ratio;
+  //   uv2 = uv2 + 0.5;
+  //   vec4 col = texture2D(originTexture, uv2);
+  
+  //   // 外发光和原图混合，侵入原图一点点
+  //   col = mix(outlineColor, col, smoothstep(0.51, 0.55, alpha));
+
+  //   gl_FragColor = col;
+  }
+}%

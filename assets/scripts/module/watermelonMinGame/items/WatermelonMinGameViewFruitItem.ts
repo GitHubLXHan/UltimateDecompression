@@ -1,8 +1,3 @@
-/*
- * @Author: yg
- * @Date: 2022/11/23
- * @Description: 合成西瓜小游戏水果item
- */
 
 import { BaseComponent } from "../../../extension/components/BaseComponent";
 import { GameSprite } from "../../../extension/game/GameSprite";

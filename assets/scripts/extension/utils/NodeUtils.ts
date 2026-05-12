@@ -1,8 +1,3 @@
-
-/**
- * @description:
- * @author: Zeros
- */
 export class NodeUtils {
 	/**
 	 * static GetWidget

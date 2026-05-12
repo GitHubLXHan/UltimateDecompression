@@ -1,9 +1,5 @@
 import { EaseType } from "../types/EaseType";
 
-/**
- * @description: UI动画标记类，用于在节点下获取所有动画组件用
- * @author: Zeros
- */
 const { ccclass, property } = cc._decorator
 @ccclass
 export abstract class ViewAnimation extends cc.Component {

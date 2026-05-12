@@ -1,7 +1,3 @@
-/**
- * @description: 
- * @author: Zeros
- */
 export enum AudioConfig {
     Close_View = "Close_View",
     Open_View = "Open_View",

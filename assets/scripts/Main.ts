@@ -1,11 +1,12 @@
 import { UIMgr } from "./core/manager/UIMgr";
+import { PopMgr } from "./core/popMessage/PopMgr";
 import { ResPathUtils } from "./core/utils/ResPathUtils";
+import { PopMsgView } from "./module/popMessage/PopMsgView";
 import { AudioMgr } from "./extension/audio/AudioMgr";
 import { resource } from "./extension/resources/ResourceManager";
 import { UpdateMgr } from "./extension/update/UpdateMgr";
 import { NodeUtils } from "./extension/utils/NodeUtils";
 import { UILayerType } from "./extension/view/types/UILayerType";
-import { UltimateDecompressionGameView } from "./module/UltimateDecompressionGame/views/UltimateDecompressionGameView";
 import { WatermelonMinGameView } from "./module/watermelonMinGame/views/WatermelonMinGameView";
 
 const { ccclass } = cc._decorator;
@@ -14,6 +15,8 @@ const { ccclass } = cc._decorator;
 export class Main extends cc.Component {
 	private _width = 720;
 	private _height = 1280;
+
+	private wxFirstSceneComponent: any;
 
 	onLoad() {
 		cc.debug.setDisplayStats(false);
@@ -37,6 +40,7 @@ export class Main extends cc.Component {
 		viewWidget.updateAlignment();
 
 		UIMgr.Ins.init(viewRoot, ResPathUtils.ViewPrefabPath, this._width, viewRoot.height, CC_DEBUG ? 5 : 60);
+		PopMgr.Ins.init(PopMsgView, UIMgr.Ins);
 		AudioMgr.Ins.init(ResPathUtils.getBgmPath(""), ResPathUtils.getSoundPath(""), {
 			bgmEnabled: true,
 			soundEnabled: true,
@@ -87,15 +91,20 @@ export class Main extends cc.Component {
 	}
 
 	private openWatermelonGame() {
-		(<any>window).loadMain(() => {
-			// 这里保留一个可选入口，方便后续切换到新小游戏预制调试。
-			const useUltimateDecompressionGame = true;
-			if (useUltimateDecompressionGame) {
-				UIMgr.Ins.open(UltimateDecompressionGameView, UILayerType.View);
-			} else {
-				UIMgr.Ins.open(WatermelonMinGameView, UILayerType.View);
-			}
-		});
+
+		let openGame = () => {
+			UIMgr.Ins.open(WatermelonMinGameView, UILayerType.View);
+		}
+
+		let loadMain = (<any>window).loadMain;
+		if (loadMain !== undefined) {
+			loadMain(() => {
+				openGame();
+			});
+		} else if (this.wxFirstSceneComponent) {
+			this.wxFirstSceneComponent.onLoginViewOpenDone();
+			openGame();
+		}
 
 	}
 }

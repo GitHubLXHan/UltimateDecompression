@@ -1,0 +1,116 @@
+// Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
+
+CCEffect %{
+  techniques:
+  - passes:
+    - vert: vs
+      frag: fs
+      blendState:
+        targets:
+        - blend: true
+      rasterizerState:
+        cullMode: none
+      properties:
+        texture: { value: white }
+        mid_color: { value: [1.0, 1.0, 1.0, 1.0], editor: { type: color, tooltip: "中心颜色" }}
+        side_color: { value: [1.0, 1.0, 1.0, 1.0], editor: { type: color, tooltip: "外围颜色" }}
+        side_position:  { value: 1, editor: { slide: true, range: [0, 1.5], step: 0.01, tooltip: "外围颜色位置"} }
+        ratio: { value: 1, editor: { slide: true, range: [0, 5], step: 0.01, tooltip: "宽高拉伸"} }
+        repeat_tex: { value: black, editor: {tooltip: "叠加贴图" }}
+        repeat_tex_blend: { value: 1, editor: { slide: true, range: [0, 1], step: 0.01, tooltip: "叠加贴图透明度"} }
+        repeat_tex_tiling: { value: [1, 1, 0, 0], editor: {tooltip: "叠加贴图UV" }}
+
+}%
+
+
+CCProgram vs %{
+  precision highp float;
+
+  #include <cc-global>
+  #include <cc-local>
+
+  in vec3 a_position;
+  in vec4 a_color;
+  out vec4 v_color;
+
+  #if USE_TEXTURE
+  in vec2 a_uv0;
+  out vec2 v_uv0;
+  #endif
+
+  void main () {
+    vec4 pos = vec4(a_position, 1);
+
+    #if CC_USE_MODEL
+    pos = cc_matViewProj * cc_matWorld * pos;
+    #else
+    pos = cc_matViewProj * pos;
+    #endif
+
+    #if USE_TEXTURE
+    v_uv0 = a_uv0;
+    #endif
+    v_color = a_color;
+
+    gl_Position = pos;
+  }
+}%
+
+
+CCProgram fs %{
+  precision highp float;
+
+  #include <alpha-test>
+  #include <texture>
+
+  in vec4 v_color;
+
+  #if USE_TEXTURE
+  in vec2 v_uv0;
+  uniform sampler2D texture;
+  #endif
+
+  uniform sampler2D repeat_tex;
+
+  uniform vsufm {
+    vec4 mid_color;
+    vec4 side_color;
+    vec4 repeat_tex_tiling;
+    float side_position;
+    float ratio;
+    float repeat_tex_blend;
+  };
+
+  
+
+  void main () {
+    vec4 col = vec4(1,1,1,1);
+
+    #if USE_TEXTURE
+    vec2 uv0 = vec2(v_uv0.x - 0.5, v_uv0.y - 0.5);
+
+    float dx = uv0.x / side_position * ratio;
+    float dy = uv0.y / side_position;
+
+    float dst = sqrt(dx * dx + dy * dy);
+    col = mid_color * clamp(1.0 - dst, 0.0, 1.0) + side_color * clamp(dst, 0.0, 1.0);
+    vec2 ruv = repeat_tex_tiling.zw + v_uv0 * repeat_tex_tiling.xy;
+    ruv.x = mod(ruv.x, 1.0);
+    ruv.y = mod(ruv.y, 1.0);
+
+    vec4 repeat_tex_col = texture(repeat_tex, ruv);
+    float blend = repeat_tex_col.a * clamp(repeat_tex_blend, 0.0, 1.0);
+    col = col * (1.0 - blend) + (repeat_tex_col * blend);
+
+    #endif
+
+    col.a =  v_color.a;
+
+    #if USE_BGRA
+      gl_FragColor = col.bgra;
+    #else
+      gl_FragColor = col.rgba;
+    #endif
+  }
+  
+}%

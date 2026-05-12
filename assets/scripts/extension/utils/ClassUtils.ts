@@ -1,9 +1,6 @@
 import { RefClass } from "../basecore/RefDecorator";
 import { LogMgr } from "../log/LogMgr"
-/**
- * @description: 
- * @author: Zeros
- */
+
 @RefClass
 export class ClassUtils {
     private static readonly devClssLink: string = "__quick_compile_project__";

@@ -1,8 +1,4 @@
 import { Dictionary } from "../../basecore/Dictionary";
-/**
- * @description: 
- * @author: Zeros
- */
 export class ResBase {
     private _root: cc.Node;
     private _nodeStore: Dictionary<string, cc.Node> = new Dictionary<string, cc.Node>();

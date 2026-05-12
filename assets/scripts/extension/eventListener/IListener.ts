@@ -1,8 +1,3 @@
-/**
- * @description: 
- * @author: Zeros
- */
-
 export interface IListener<T, U>
 {
     /**

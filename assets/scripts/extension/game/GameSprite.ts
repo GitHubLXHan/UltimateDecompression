@@ -1,12 +1,3 @@
-/*
- * @Author: yf
- * @Date: 2021-07-23 13:56:33
- * @LastEditTime: 2023-07-26 14:34:02
- * @LastEditors: yf
- * @Description: In User Settings Edit
- * @FilePath: /client_v2_4/assets/scripts/module/common/component/GameSprite.ts
- */
-
 import { resource } from "../resources/ResourceManager";
 import { Mathf } from "../basecore/Mathf";
 import { LogMgr } from "../log/LogMgr";

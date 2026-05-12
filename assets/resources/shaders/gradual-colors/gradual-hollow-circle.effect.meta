@@ -1,0 +1,18 @@
+{
+  "ver": "1.0.27",
+  "uuid": "5b4d4375-c91d-407b-ac70-91c1c8b1e0ae",
+  "importer": "effect",
+  "compiledShaders": [
+    {
+      "glsl1": {
+        "vert": "\nprecision highp float;\nuniform mat4 cc_matViewProj;\nuniform mat4 cc_matWorld;\nattribute vec3 a_position;\nattribute vec4 a_color;\nvarying vec4 v_color;\n#if USE_TEXTURE\nattribute vec2 a_uv0;\nvarying vec2 v_uv0;\n#endif\nvoid main () {\n  vec4 pos = vec4(a_position, 1);\n  #if CC_USE_MODEL\n  pos = cc_matViewProj * cc_matWorld * pos;\n  #else\n  pos = cc_matViewProj * pos;\n  #endif\n  v_uv0 = a_uv0;\n  v_color = a_color;\n  gl_Position = pos;\n}",
+        "frag": "\nprecision highp float;\n#if USE_ALPHA_TEST\n#endif\nvarying vec4 v_color;\n#if USE_TEXTURE\nvarying vec2 v_uv0;\nuniform sampler2D texture;\n#endif\nuniform sampler2D repeat_tex;\nuniform vec2 tex_size;\nuniform vec2 center;\nuniform float radius;\nuniform float fade_size;\nvoid main () {\n  vec4 col = vec4(1,1,1,1);\n  col = texture2D(texture, v_uv0) * v_color;\n  float fade = clamp(fade_size, 0.0, radius);\n  float dx = abs(center.x - v_uv0.x) / (1.0 / tex_size.x);\n  float dy = abs(center.y - v_uv0.y) / (1.0 / tex_size.y);\n  float min_v = radius - fade;\n  float dst = sqrt(dx * dx + dy * dy);\n  float fa = (clamp(dst, min_v, radius) - min_v) * (1.0 / (radius - min_v));\n  col.a = col.a * fa;\n  #if USE_BGRA\n    gl_FragColor = col.bgra;\n  #else\n    gl_FragColor = col.rgba;\n  #endif\n}"
+      },
+      "glsl3": {
+        "vert": "\nprecision highp float;\nuniform CCGlobal {\n  mat4 cc_matView;\n  mat4 cc_matViewInv;\n  mat4 cc_matProj;\n  mat4 cc_matProjInv;\n  mat4 cc_matViewProj;\n  mat4 cc_matViewProjInv;\n  vec4 cc_cameraPos;\n  vec4 cc_time;\n  mediump vec4 cc_screenSize;\n  mediump vec4 cc_screenScale;\n};\nuniform CCLocal {\n  mat4 cc_matWorld;\n  mat4 cc_matWorldIT;\n};\nin vec3 a_position;\nin vec4 a_color;\nout vec4 v_color;\n#if USE_TEXTURE\nin vec2 a_uv0;\nout vec2 v_uv0;\n#endif\nvoid main () {\n  vec4 pos = vec4(a_position, 1);\n  #if CC_USE_MODEL\n  pos = cc_matViewProj * cc_matWorld * pos;\n  #else\n  pos = cc_matViewProj * pos;\n  #endif\n  v_uv0 = a_uv0;\n  v_color = a_color;\n  gl_Position = pos;\n}",
+        "frag": "\nprecision highp float;\n#if USE_ALPHA_TEST\n  uniform ALPHA_TEST {\n    float alphaThreshold;\n  };\n#endif\nin vec4 v_color;\n#if USE_TEXTURE\nin vec2 v_uv0;\nuniform sampler2D texture;\n#endif\nuniform sampler2D repeat_tex;\nuniform vsufm {\n  vec2 tex_size;\n  vec2 center;\n  float radius;\n  float fade_size;\n};\nvoid main () {\n  vec4 col = vec4(1,1,1,1);\n  col = texture(texture, v_uv0) * v_color;\n  float fade = clamp(fade_size, 0.0, radius);\n  float dx = abs(center.x - v_uv0.x) / (1.0 / tex_size.x);\n  float dy = abs(center.y - v_uv0.y) / (1.0 / tex_size.y);\n  float min_v = radius - fade;\n  float dst = sqrt(dx * dx + dy * dy);\n  float fa = (clamp(dst, min_v, radius) - min_v) * (1.0 / (radius - min_v));\n  col.a = col.a * fa;\n  #if USE_BGRA\n    gl_FragColor = col.bgra;\n  #else\n    gl_FragColor = col.rgba;\n  #endif\n}"
+      }
+    }
+  ],
+  "subMetas": {}
+}

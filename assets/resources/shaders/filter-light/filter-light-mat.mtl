@@ -1,0 +1,28 @@
+{
+  "__type__": "cc.Material",
+  "_name": "New Material",
+  "_objFlags": 0,
+  "_native": "",
+  "_effectAsset": {
+    "__uuid__": "51ebe23e-d47c-4342-b215-9924865ecbfd"
+  },
+  "_techniqueIndex": 0,
+  "_techniqueData": {
+    "0": {
+      "defines": {
+        "ENABLE_LIGHT": true
+      },
+      "props": {
+        "color": {
+          "__type__": "cc.Color",
+          "r": 255,
+          "g": 255,
+          "b": 255,
+          "a": 255
+        },
+        "angle": 45,
+        "size": 0.1
+      }
+    }
+  }
+}

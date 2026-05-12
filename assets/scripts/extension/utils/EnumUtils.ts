@@ -1,10 +1,6 @@
 import { Dictionary } from "../basecore/Dictionary";
 import { List } from "../basecore/List";
 
-/**
- * @description: 
- * @author: Zeros
- */
 export class EnumUtils
 {
     /**

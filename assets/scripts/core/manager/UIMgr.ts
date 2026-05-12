@@ -1,11 +1,3 @@
-/*
- * @Author: your name
- * @Date: 2021-04-16 18:31:22
- * @LastEditTime: 2023-10-30 15:00:44
- * @LastEditors: yf
- * @Description: In User Settings Edit
- * @FilePath: /client/assets/scripts/core/manager/UIMgr.ts
- */
 import { RefClass } from "../../extension/basecore/RefDecorator";
 import { ClassUtils } from "../../extension/utils/ClassUtils";
 import { BaseUIMgr } from "../../extension/view/BaseUIMgr";

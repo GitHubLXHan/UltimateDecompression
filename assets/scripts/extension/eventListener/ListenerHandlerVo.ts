@@ -1,10 +1,6 @@
 import { RefClass } from "../basecore/RefDecorator";
 import { IPoolInstance } from "../pool/IPoolInstance";
 
-/**
- * @description: 
- * @author: Zeros
- */
 @RefClass
 export class ListenerHandlerVo implements IPoolInstance {
     public handler:(target: any, args: any[])=>void;

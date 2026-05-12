@@ -6,10 +6,6 @@ import { ClassUtils } from "../utils/ClassUtils";
 import { IPoolInstance } from "./IPoolInstance";
 
 
-/**
- * @description: 
- * @author: Zeros
- */
 export class PoolMgr extends BaseProfiler<BaseProfilerEventType> {
     private static _Ins: PoolMgr;
 

@@ -1,0 +1,103 @@
+CCEffect %{
+  techniques:
+  - passes:
+    - vert: vs
+      frag: fs
+      blendState:
+        targets:
+        - blend: false
+      rasterizerState:
+        cullMode: none
+      properties:
+        texture: { value: white }
+        shine_color: { value: [1.0, 1.0, 1.0, 1.0], editor: { type: color, tooltip: "闪光颜色" }}
+        shine_strength: { value: 0.5, editor: { slide: true, range: [0, 5], step: 0.01, tooltip: "闪光强度"} }
+}%
+
+CCProgram vs %{
+
+precision highp float;
+
+#include <cc-global>
+#include <cc-local>
+
+in vec3 a_position;
+in vec4 a_color;
+#if USE_TINT
+  in vec4 a_color0;
+#endif
+
+in vec2 a_uv0;
+out vec2 v_uv0;
+
+out vec4 v_light;
+#if USE_TINT
+  out vec4 v_dark;
+#endif
+
+void main () {
+  mat4 mvp;
+  
+  #if CC_USE_MODEL
+    mvp = cc_matViewProj * cc_matWorld;
+  #else
+    mvp = cc_matViewProj;
+  #endif
+
+  v_uv0 = a_uv0;
+
+  v_light = a_color;
+  #if USE_TINT
+    v_dark = a_color0;
+  #endif
+
+  gl_Position = mvp * vec4(a_position, 1);
+}
+
+}%
+
+CCProgram fs %{
+
+precision highp float;
+
+uniform sampler2D texture;
+in vec2 v_uv0;
+
+in vec4 v_light;
+#if USE_TINT
+  in vec4 v_dark;
+#endif
+
+uniform vsufm {
+  vec4 shine_color;
+  float shine_strength;
+};
+
+#include <alpha-test>
+#include <texture>
+
+void main () {
+  vec4 texColor = vec4(1.0);
+  CCTexture(texture, v_uv0, texColor);
+  vec4 color;
+
+  vec4 finalColor = vec4(0,0,0,0);
+
+
+  #if USE_TINT
+    color.a = v_light.a * texColor.a;
+    color.rgb = ((texColor.a - 1.0) * v_dark.a + 1.0 - texColor.rgb) * v_dark.rgb + texColor.rgb * v_light.rgb;
+    
+  #else
+    color = texColor * v_light;
+  #endif
+
+  //取最大值为最小透明度，黑色会被强制透明
+  float maxAlpha = max(color.a, max(color.r, max(color.g, color.b))) * color.a;
+  
+  finalColor = color + shine_color * shine_strength * maxAlpha;
+
+  gl_FragColor = finalColor;
+}
+
+}%

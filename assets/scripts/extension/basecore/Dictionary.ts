@@ -2,10 +2,6 @@ import { List } from "./List";
 import { RefClass } from "./RefDecorator";
 import { LogMgr } from "../log/LogMgr";
 
-/**
- * @description: 
- * @author: Zeros
- */
 @RefClass
 export class Dictionary<T extends string | number, U> {
     private _keyList: List<T> = new List<T>();

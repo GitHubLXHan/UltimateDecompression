@@ -1,7 +1,3 @@
-/**
- * @description: 
- * @author: Zeros
- */
 export enum BtnEventType {
     OnTouchTap,//点击（按下并在显示对象区域内松开）
     OnTouchEnd,//松开

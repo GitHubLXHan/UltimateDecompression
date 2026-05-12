@@ -1,7 +1,3 @@
-/**
- * @description: 
- * @author: Zeros
- */
 export enum LogLevelType
 {
     log,

@@ -14,12 +14,6 @@ import { DeviceUtils } from "../utils/DeviceUtils";
 import { IProfiler } from "../profiler/IProfiler";
 import { Monitor } from "../profiler/Monitor";
 
-/**
- * @description:
- * @author: Zeros
- *
- * 注意：预制件命名规则 - view类名的小驼峰法
- */
 export abstract class BaseUIMgr extends Listener<UIEventType, BaseUIMgr> implements IProfiler {
 	//View实例的缓存库
 	protected _instanceStore: Dictionary<string, ViewCache> = new Dictionary<string, ViewCache>();

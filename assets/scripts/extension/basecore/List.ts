@@ -1,7 +1,3 @@
-/**
- * @description: 
- * @author: Zeros
- */
 import { RandomUtils } from "./../utils/RandomUtils";
 import { ListSortUtils } from "./ListSortUtils";
 import { SortType } from "./SortType";

@@ -1,9 +1,3 @@
-/*
- * @Author: yg
- * @Date: 2022/11/24
- * @Description: 合成西瓜小游戏结算界面
- */
-
 import { UIMgr } from "../../../core/manager/UIMgr";
 import { BaseView } from "../../../core/view/compoment/BaseView";
 import { AudioConfig } from "../../../extension/audio/AudioConfig";
@@ -34,9 +28,9 @@ export class WatermelonMinGameEndView extends BaseView {
 
     private _mask: cc.Node;
     private twList: List<cc.Tween> = new List<cc.Tween>();
-    private _node_bg_root: cc.Node;
-    private win_eff: GameSpine;
-    private win_add_eff: GameSpine;
+    // private _node_bg_root: cc.Node;
+    // private win_eff: GameSpine;
+    // private win_add_eff: GameSpine;
 
 
     private _starTween: List<cc.Tween> = new List<cc.Tween>();
@@ -60,9 +54,9 @@ export class WatermelonMinGameEndView extends BaseView {
         this.all_damage_gp = this.ResBase.getNode("all_damage_gp");
         this.all_damage_lb = this.ResBase.getComponent("all_damage_lb", cc.Label);
         this._mask = this.ResBase.getNode("mask");
-        this._node_bg_root = this.ResBase.getNode("node_bg_root");
-        this.win_eff = this.ResBase.getComponent("win_eff", GameSpine);
-        this.win_add_eff = this.ResBase.getComponent("win_add_eff", GameSpine);
+        // this._node_bg_root = this.ResBase.getNode("node_bg_root");
+        // this.win_eff = this.ResBase.getComponent("win_eff", GameSpine);
+        // this.win_add_eff = this.ResBase.getComponent("win_add_eff", GameSpine);
     }
 
     protected addEvents(): void {
@@ -79,8 +73,8 @@ export class WatermelonMinGameEndView extends BaseView {
         super.updateView(arg1);
         this._param = arg1;
 
-        this.win_eff.node.active = true;
-        this.win_add_eff.node.active = true;
+        // this.win_eff.node.active = true;
+        // this.win_add_eff.node.active = true;
 
         //战斗胜利
         AudioMgr.Ins.playSound(AudioConfig.Battle_Win);
@@ -126,13 +120,13 @@ export class WatermelonMinGameEndView extends BaseView {
                     this.content.active = true;
                     centerY = this.content.height / 2;
                     this._mask.y = centerY;
-                    this._node_bg_root.y = centerY + 160;
+                    // this._node_bg_root.y = centerY + 160;
 
                 } else {
                     // 固定值
                     centerY = -120;
                     this._mask.y = centerY;
-                    this._node_bg_root.y = 120;
+                    // this._node_bg_root.y = 120;
 
                 }
 
@@ -145,31 +139,31 @@ export class WatermelonMinGameEndView extends BaseView {
      * 播放内容展示动画
      */
     public playMask() {
-        let playWinEff = () => {
-            this.win_eff.setCompleteListener(() => {
-                this.win_eff.setCompleteListener(null);
+        // let playWinEff = () => {
+        //     this.win_eff.setCompleteListener(() => {
+        //         this.win_eff.setCompleteListener(null);
 
-                if (this.win_add_eff.isLoaded) {
-                    this.win_add_eff.play(this.win_add_eff.animation, true, true);
-                } else {
-                    this.win_add_eff.setLoadCompletedHandle(() => {
-                        this.win_add_eff.setLoadCompletedHandle(null);
-                        this.win_add_eff.play(this.win_add_eff.animation, true, true);
-                    });
-                }
+        //         if (this.win_add_eff.isLoaded) {
+        //             this.win_add_eff.play(this.win_add_eff.animation, true, true);
+        //         } else {
+        //             this.win_add_eff.setLoadCompletedHandle(() => {
+        //                 this.win_add_eff.setLoadCompletedHandle(null);
+        //                 this.win_add_eff.play(this.win_add_eff.animation, true, true);
+        //             });
+        //         }
 
-            });
-            this.win_eff.play(this.win_eff.animation, false, true);
-        }
+        //     });
+        //     this.win_eff.play(this.win_eff.animation, false, true);
+        // }
 
-        if (this.win_eff.isLoaded) {
-            playWinEff();
-        } else {
-            this.win_eff.setLoadCompletedHandle(() => {
-                this.win_eff.setLoadCompletedHandle(null);
-                playWinEff();
-            });
-        }
+        // if (this.win_eff.isLoaded) {
+        //     playWinEff();
+        // } else {
+        //     this.win_eff.setLoadCompletedHandle(() => {
+        //         this.win_eff.setLoadCompletedHandle(null);
+        //         playWinEff();
+        //     });
+        // }
 
         while (this.twList.length > 0) {
             this.twList.shift().stop();
@@ -204,9 +198,9 @@ export class WatermelonMinGameEndView extends BaseView {
             this.twList.shift().stop();
         }
 
-        if (this._param?.enterMainGame) {
-            UIMgr.Ins.close(WatermelonMinGameView);
-        }
+        // if (this._param?.enterMainGame) {
+        //     UIMgr.Ins.close(WatermelonMinGameView);
+        // }
 
         super.onClose();
     }

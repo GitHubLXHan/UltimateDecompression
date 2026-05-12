@@ -1,4 +1,0 @@
-[
-  { "block_id": 101, "type": "normal", "hp": 8, "gold": 2, "size": [1.4, 1.4], "icon": "watermelonMinGame/ui/auto/common_img_xinxik" },
-  { "block_id": 201, "type": "spike", "hp": 5, "gold": 4, "size": [1.4, 1.4], "icon": "watermelonMinGame/ui/auto/common_img_anniu_huang" }
-]

@@ -6,10 +6,6 @@ import { PoolMgr } from "../pool/PoolMgr";
 import { AudioEventType } from "./AudioEventType";
 import { Listener } from "../eventListener/Listener";
 
-/**
- * @description: 
- * @author: Zeros
- */
 @RefClass
 export class AudioPlayer extends Listener<AudioEventType, AudioPlayer> implements IPoolInstance {
     private _clip: cc.AudioClip;

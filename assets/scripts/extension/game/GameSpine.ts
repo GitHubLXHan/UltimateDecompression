@@ -1,12 +1,3 @@
-/*
- * @Author: yf
- * @Date: 2021-07-23 13:56:33
- * @LastEditTime: 2023-07-03 17:27:52
- * @LastEditors: yf
- * @Description: In User Settings Edit
- * @FilePath: /client_v2_4/assets/scripts/module/common/component/GameSpine.ts
- */
-
 import { resource } from "../resources/ResourceManager";
 import { Dictionary } from "../basecore/Dictionary";
 import { List } from "../basecore/List";

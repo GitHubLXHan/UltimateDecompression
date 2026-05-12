@@ -5,10 +5,6 @@ import { ListenerHandlerVo } from "./ListenerHandlerVo";
 import { PoolMgr } from "../pool/PoolMgr";
 import { BaseLog } from "../log/BaseLog";
 
-/**
- * @description:
- * @author: Zeros
- */
 export abstract class Listener<T extends string | number, Listener> extends BaseLog implements IListener<T, Listener> {
 	private _eventStore: Dictionary<T, List<ListenerHandlerVo>> = new Dictionary<T, List<ListenerHandlerVo>>();
 

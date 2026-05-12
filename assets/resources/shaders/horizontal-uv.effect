@@ -1,0 +1,88 @@
+// Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
+
+CCEffect %{
+  techniques:
+  - passes:
+    - vert: vs
+      frag: fs
+      blendState:
+        targets:
+        - blend: true
+      rasterizerState:
+        cullMode: none
+      properties:
+        passTime: { value: 0 }
+        speed: { value: 0 }
+        maxWidth: { value: 0 }
+        maxHeight: { value: 0 }
+        x: { value: 0 }
+        y: { value: 0 }
+        w: { value: 0 }
+        h: { value: 0 }
+}%
+
+
+CCProgram vs %{
+
+  precision highp float;
+
+  #include <cc-global>
+
+  in vec3 a_position;
+
+  in mediump vec2 a_uv0;
+  out mediump vec2 v_uv0;
+
+  void main () {
+    gl_Position = cc_matViewProj * vec4(a_position, 1);
+    v_uv0 = a_uv0;
+  }
+}%
+
+
+CCProgram fs %{
+  precision highp float;
+
+  uniform PassTime {
+    float passTime;
+  };
+  uniform Speed {
+    float speed;
+  };
+  uniform X {
+    float x;
+  };
+  uniform Y {
+    float y;
+  };
+  uniform MaxWidth {
+    float maxWidth;
+  };
+  uniform MaxWHeight {
+    float maxHeight;
+  };
+  uniform W {
+    float w;
+  };
+  uniform H {
+    float h;
+  };
+
+
+  uniform sampler2D texture;
+  in mediump vec2 v_uv0;
+
+  mediump vec2 r_uv0;
+
+  void main () {
+    vec2 uv = v_uv0.xy;
+
+    vec2 offset = vec2(x / maxWidth, y / maxHeight);
+    vec2 size = vec2(w / maxWidth, y / maxHeight);
+
+    uv.x += mod(passTime * speed, size.x);
+    uv = vec2(offset.x + mod(uv.x, size.x), uv.y);
+    vec4 color = texture2D(texture, uv);
+    gl_FragColor = color;
+  }
+}%

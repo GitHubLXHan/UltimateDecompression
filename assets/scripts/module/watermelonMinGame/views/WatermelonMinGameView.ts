@@ -1,15 +1,11 @@
-/*
- * @Author: yg
- * @Date: 2022/11/23
- * @Description: 合成西瓜小游戏
- */
-
 import { UIMgr } from "../../../core/manager/UIMgr";
+import { PopMgr } from "../../../core/popMessage/PopMgr";
 import { BaseView } from "../../../core/view/compoment/BaseView";
 import { List } from "../../../extension/basecore/List";
 import { RefClass } from "../../../extension/basecore/RefDecorator";
 import { BtnEventType } from "../../../extension/components/GameBtn/BtnEventType";
 import { GameButton } from "../../../extension/game/GameButton";
+import { GameLabel } from "../../../extension/game/GameLabel";
 import { GameSpine } from "../../../extension/game/GameSpine";
 import { TimeMgr } from "../../../extension/time/TimeMgr";
 import { ClassUtils } from "../../../extension/utils/ClassUtils";
@@ -22,6 +18,7 @@ import { IWatermelonMinGameEndViewData, WatermelonMinGameEndView } from "./Water
 @RefClass
 export class WatermelonMinGameView extends BaseView {
     private static readonly CACHE_KEY = "watermelonMinGame_best_score";
+    private static readonly REMAINING_TIME_KEY = "watermelonMinGame_remaining_time";
     node_fruit: cc.Node = undefined;
     node_content: cc.Node = undefined;
     node_sp_boom: cc.Node = undefined;
@@ -31,14 +28,16 @@ export class WatermelonMinGameView extends BaseView {
     node_tip_gaming: cc.Node = undefined;
     node_tip_start: cc.Node = undefined;
 
-    label_tip: cc.Label = undefined;
-    label_score: cc.Label = undefined;
-    label_score_h: cc.Label = undefined;
-    label_time: cc.Label = undefined;
-    label_count: cc.Label = undefined;
+    label_tip: GameLabel = undefined;
+    label_score: GameLabel = undefined;
+    label_score_h: GameLabel = undefined;
+    label_time: GameLabel = undefined;
+    label_count: GameLabel = undefined;
 
     button_touch: GameButton = undefined;
     button_start: GameButton = undefined;
+    remaining_time_lb: GameLabel = undefined;
+    add_time_btn: GameButton = undefined;
 
     private _skipBtn: GameButton;
 
@@ -74,6 +73,8 @@ export class WatermelonMinGameView extends BaseView {
 
     _info = undefined;
 
+    _remaining_time: number = 0;
+
     public constructor() {
         super();
         this.skinName = "watermelonMinGame/prefabs/watermelonMinGameView";
@@ -92,16 +93,18 @@ export class WatermelonMinGameView extends BaseView {
         this.node_tip_gaming = this.ResBase.getNode("TipGaming");
         this.node_tip_start = this.ResBase.getNode("TipStart");
 
-        this.label_tip = this.ResBase.getComponent("LabelTip", cc.Label);
-        this.label_score = this.ResBase.getComponent("LabelScore", cc.Label);
-        this.label_score_h = this.ResBase.getComponent("LabelScoreH", cc.Label);
-        this.label_time = this.ResBase.getComponent("LabelTime", cc.Label);
-        this.label_count = this.ResBase.getComponent("LabelCount", cc.Label);
+        this.label_tip = this.ResBase.getComponent("LabelTip", GameLabel);
+        this.label_score = this.ResBase.getComponent("LabelScore", GameLabel);
+        this.label_score_h = this.ResBase.getComponent("LabelScoreH", GameLabel);
+        this.label_time = this.ResBase.getComponent("LabelTime", GameLabel);
+        this.label_count = this.ResBase.getComponent("LabelCount", GameLabel);
 
         this.button_touch = this.ResBase.getComponent("watermelonMinGameView", GameButton);
         this.button_start = this.ResBase.getComponent("BtnStart", GameButton);
 
         this._skipBtn = this.ResBase.getComponent("skipBtn", GameButton);
+        this.remaining_time_lb = this.ResBase.getComponent("remaining_time_lb", GameLabel);
+        this.add_time_btn = this.ResBase.getComponent("add_time_btn", GameButton);
     }
 
     protected addEvents(): void {
@@ -109,6 +112,7 @@ export class WatermelonMinGameView extends BaseView {
         this.button_touch.addListener(BtnEventType.OnTouchStart, this.onTouch, this);
         this.button_start.addListener(BtnEventType.OnTouchTap, this.onStart, this);
         this._skipBtn.addListener(BtnEventType.OnTouchTap, this._onSkipBtnClick, this);
+        this.add_time_btn.addListener(BtnEventType.OnTouchTap, this._onAddTimeBtnClick, this);
 
         UIMgr.Ins.addListener(UIEventType.Close, this._onResultViewClose, this);
     }
@@ -118,6 +122,7 @@ export class WatermelonMinGameView extends BaseView {
         this.button_touch.removeListener(BtnEventType.OnTouchStart, this.onTouch, this);
         this.button_start.removeListener(BtnEventType.OnTouchTap, this.onStart, this);
         this._skipBtn.removeListener(BtnEventType.OnTouchTap, this._onSkipBtnClick, this);
+        this.add_time_btn.removeListener(BtnEventType.OnTouchTap, this._onAddTimeBtnClick, this);
 
         UIMgr.Ins.removeListener(UIEventType.Close, this._onResultViewClose, this);
     }
@@ -140,6 +145,7 @@ export class WatermelonMinGameView extends BaseView {
         this._fruit_next = undefined;
         this._fruit_count = 0;
 
+        this._skipBtn.node.active = false;
 
         this.openViewClear();
         this.openViewTaskPart();
@@ -148,6 +154,7 @@ export class WatermelonMinGameView extends BaseView {
         this.updateScore();
         this.updateCount();
         this.initFruitPool();
+        this.showRemainingGameTime();
     }
 
     // 初始化缩放后的图片大小
@@ -169,7 +176,7 @@ export class WatermelonMinGameView extends BaseView {
     // 开启界面时更新说明显示
     private openViewTaskPart() {
         this.node_task.active = true;
-        this.label_tip.string = this._info[3][1];
+        // this.label_tip.string = this._info[3][1];
     }
 
     // 开启界面时显示最高分数
@@ -179,16 +186,43 @@ export class WatermelonMinGameView extends BaseView {
         this.label_score_h.string = this.getBestScore().toString();
     }
 
+    private showRemainingGameTime() {
+        let raw = cc.sys.localStorage.getItem(WatermelonMinGameView.REMAINING_TIME_KEY);
+        let time = Number(raw);
+
+        if (time === undefined) {
+            time = 1;
+            this.saveRemainingGameTime(time);
+            return;
+        }
+
+        this._remaining_time = time;
+        this.remaining_time_lb.string = `剩余次数：${this._remaining_time}`;
+    }
+
+    private saveRemainingGameTime(time: number) {
+        cc.sys.localStorage.setItem(WatermelonMinGameView.REMAINING_TIME_KEY, time.toString());
+        this.showRemainingGameTime();
+    }
+
     /* ---------- ---------- 游戏流程 Part Begin ---------- ---------- */
 
 
     // 点击开始按钮
     private onStart() {
+        if (this._remaining_time <= 0) {
+            PopMgr.Ins.show("剩余次数不足");
+            return;
+        }
+        this.saveRemainingGameTime(--this._remaining_time);
+
         this._is_gaming = true;
         this.node_task.active = false;
 
         this.node_tip_start.active = false;
         this.node_tip_gaming.active = true;
+
+        this._skipBtn.node.active = true;
 
         this.initGame();
     }
@@ -367,13 +401,13 @@ export class WatermelonMinGameView extends BaseView {
                 this.updateScore();
             });
 
-            if (nextId >= (this._fruit_name.length - 2)) {
-                // 合成大西瓜后进入主游戏
-                this._is_end = true;
-                setTimeout(() => {
-                    this.gameEnd(true);
-                }, 2000);
-            }
+            // if (nextId >= (this._fruit_name.length - 2)) {
+            //     // 合成大西瓜后进入主游戏
+            //     this._is_end = true;
+            //     setTimeout(() => {
+            //         this.gameEnd(true);
+            //     }, 2000);
+            // }
         }
     }
     // 产生爆炸效果
@@ -572,8 +606,15 @@ export class WatermelonMinGameView extends BaseView {
         }
     }
 
+    // 结算本局游戏 
     private _onSkipBtnClick(): void {
-        this.close();
+        // this.close();
+        this.gameEnd(false);
+    }
+
+    private _onAddTimeBtnClick(): void {
+        this._remaining_time++;
+        this.saveRemainingGameTime(this._remaining_time);
     }
 
     // 游戏结束发送消息
@@ -606,9 +647,9 @@ export class WatermelonMinGameView extends BaseView {
 
     private _onResultViewClose(target: UIMgr, args: [string]): void {
         let className = args[0];
-		if (className && className == ClassUtils.getClassName(WatermelonMinGameEndView)) {
-			this.updateView();
-		}
+        if (className && className == ClassUtils.getClassName(WatermelonMinGameEndView)) {
+            this.updateView();
+        }
     }
 
     protected onClose(): void {
@@ -616,5 +657,5 @@ export class WatermelonMinGameView extends BaseView {
         this.clearTimer();
         this.clearFruit();
         this.clearRedLineTween();
-	}
+    }
 }

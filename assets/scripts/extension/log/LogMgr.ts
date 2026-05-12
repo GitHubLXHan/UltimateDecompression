@@ -1,10 +1,6 @@
 import { LogLevelType } from "./LogLevelType";
 import { DateUtils } from "./../utils/DateUtils";
 
-/**
- * @description: 
- * @author: Zeros
- */
 export class LogMgr
 {
     //Log库

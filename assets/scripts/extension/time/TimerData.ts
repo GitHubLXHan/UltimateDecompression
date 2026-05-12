@@ -1,10 +1,6 @@
 import { IPoolInstance } from "../pool/IPoolInstance";
 import { RefClass } from "../basecore/RefDecorator";
 
-/**
- * @description: 
- * @author: Zeros
- */
 // const { ccclass, property, type } = _decorator;
 @RefClass
 export class TimerData implements IPoolInstance {

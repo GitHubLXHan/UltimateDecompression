@@ -3,10 +3,6 @@ import { GameSpine } from "../game/GameSpine";
 import { GameSprite } from "../game/GameSprite";
 import { resource } from "../resources/ResourceManager";
 
-/**
- * @description: 
- * @author: Zeros
- */
 const { ccclass, menu, executeInEditMode } = cc._decorator;
 
 @ccclass

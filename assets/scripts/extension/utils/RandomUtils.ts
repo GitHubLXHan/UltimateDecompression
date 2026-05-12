@@ -1,9 +1,5 @@
 import { List } from "./../basecore/List";
 
-/**
- * @description: 
- * @author: Zeros
- */
 export class RandomUtils
 {
     /**

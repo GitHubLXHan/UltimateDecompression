@@ -1,0 +1,15 @@
+{
+  "__type__": "cc.Material",
+  "_name": "horizontal-uv-mat",
+  "_objFlags": 0,
+  "_native": "",
+  "_effectAsset": {
+    "__uuid__": "6c3c0e26-ac55-4125-b17f-8559bfcf4171"
+  },
+  "_techniqueIndex": 0,
+  "_techniqueData": {
+    "0": {
+      "defines": {}
+    }
+  }
+}
