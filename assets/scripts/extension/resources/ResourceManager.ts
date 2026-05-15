@@ -1,7 +1,7 @@
 import { PathUtils } from "../../core/utils/PathUtils";
 import { Dictionary } from "../basecore/Dictionary";
+import { Listener } from "../eventListener/Listener";
 import { PoolMgr } from "../pool/PoolMgr";
-import { BaseProfiler } from "../profiler/BaseProfiler";
 import { CCAsset } from "./CCAsset";
 import { LoadTask } from "./LoadTask";
 import { ResourceEventType } from "./ResourceEventType";
@@ -19,7 +19,7 @@ export module resource {
 		}
 	}
 
-	export class ResourceManager extends BaseProfiler<ResourceEventType> {
+	export class ResourceManager extends Listener<ResourceEventType, ResourceManager>  {
 		// 外部资源文件夹名称
 		private static _extResPathPrefixList: string[] = ["ext_ui/", "shuzhi/", "heroBust/", "fashion/", "model/", "model_bs/", "fairylandHero/", "userProto"];
 		/**外部加载资源记录依赖资源的key，内部加载的资源引擎会维护好依赖 */

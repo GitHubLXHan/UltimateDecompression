@@ -11,10 +11,8 @@ import { NodeUtils } from "../utils/NodeUtils";
 import { TimeMgr } from "../time/TimeMgr";
 import { View } from "./compoment/View";
 import { DeviceUtils } from "../utils/DeviceUtils";
-import { IProfiler } from "../profiler/IProfiler";
-import { Monitor } from "../profiler/Monitor";
 
-export abstract class BaseUIMgr extends Listener<UIEventType, BaseUIMgr> implements IProfiler {
+export abstract class BaseUIMgr extends Listener<UIEventType, BaseUIMgr> {
 	//View实例的缓存库
 	protected _instanceStore: Dictionary<string, ViewCache> = new Dictionary<string, ViewCache>();
 	//View实例的缓存库，保存已关闭但未销毁的实例
@@ -33,11 +31,6 @@ export abstract class BaseUIMgr extends Listener<UIEventType, BaseUIMgr> impleme
 	private _destroyTime: number = 10 * 60;
 	//心跳
 	private _idleTimer: number = 0;
-
-	constructor() {
-		super();
-		Monitor.Ins.addProfiler(this);
-	}
 
 	/**
 	 * @description: 初始化

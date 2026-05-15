@@ -7,7 +7,7 @@ import { resource } from "./extension/resources/ResourceManager";
 import { UpdateMgr } from "./extension/update/UpdateMgr";
 import { NodeUtils } from "./extension/utils/NodeUtils";
 import { UILayerType } from "./extension/view/types/UILayerType";
-import { WatermelonMinGameView } from "./module/watermelonMinGame/views/WatermelonMinGameView";
+import { MainGameView } from "./module/mainGame/views/MainGameView";
 
 const { ccclass } = cc._decorator;
 
@@ -15,8 +15,6 @@ const { ccclass } = cc._decorator;
 export class Main extends cc.Component {
 	private _width = 720;
 	private _height = 1280;
-
-	private wxFirstSceneComponent: any;
 
 	onLoad() {
 		cc.debug.setDisplayStats(false);
@@ -47,7 +45,7 @@ export class Main extends cc.Component {
 			bgmVolume: 0.7,
 			soundVolume: 1
 		});
-		this.openWatermelonGame();
+		this.openMainGame();
 	}
 
 	private setDesignResolutionSize() {
@@ -90,10 +88,10 @@ export class Main extends cc.Component {
 		UpdateMgr.Ins.onLateUpdate(dt);
 	}
 
-	private openWatermelonGame() {
+	private openMainGame() {
 
 		let openGame = () => {
-			UIMgr.Ins.open(WatermelonMinGameView, UILayerType.View);
+			UIMgr.Ins.open(MainGameView, UILayerType.View);
 		}
 
 		let loadMain = (<any>window).loadMain;
@@ -101,9 +99,12 @@ export class Main extends cc.Component {
 			loadMain(() => {
 				openGame();
 			});
-		} else if (this.wxFirstSceneComponent) {
-			this.wxFirstSceneComponent.onLoginViewOpenDone();
-			openGame();
+		} else {
+
+			cc.assetManager.loadBundle(cc.AssetManager.BuiltinBundleName.MAIN + "", () => {
+				openGame();
+			});
+
 		}
 
 	}

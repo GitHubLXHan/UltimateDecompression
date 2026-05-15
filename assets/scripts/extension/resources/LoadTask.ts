@@ -23,7 +23,7 @@ export class LoadTask implements IPoolInstance {
         this.id = 0; // 不重置id，以便直接复用
         this.loadFuncArgs = null;
         this.loadFunc = null;
-        this.priority = 0;
+        this.priority = ResourceLoadPriority.NONE;
         this.loadFuncTarget = undefined;
     }
 }

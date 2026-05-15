@@ -547,7 +547,7 @@ export abstract class View extends BaseLog {
 		}
 
 		if (isPlayCloseSound && this.isPlayDefaultCloseSound) {
-			AudioMgr.Ins.playSound(AudioConfig.Close_View);
+			AudioMgr.Ins.playSound(AudioConfig.ViewClose);
 		}
 
 		this.clearFewTimeout();

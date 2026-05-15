@@ -1,8 +1,5 @@
 import { EventSubView } from "../../core/view/compoment/EventSubView";
-import { IPopRewardMsg } from "../../core/popMessage/IPopRewardMsg";
-import { POP_MSG_COLOR_TO_HEX } from "../../core/popMessage/PopMsgColors";
 import { RefClass } from "../../extension/basecore/RefDecorator";
-import { GameSprite } from "../../extension/game/GameSprite";
 import { IPoolInstance } from "../../extension/pool/IPoolInstance";
 import { TimeMgr } from "../../extension/time/TimeMgr";
 import { EaseType } from "../../extension/view/types/EaseType";
@@ -11,12 +8,9 @@ import { PopViewEventType } from "./types/PopViewEventType";
 
 @RefClass
 export class PopMsgSubView extends EventSubView<PopViewEventType, PopMsgSubView> implements IPoolInstance {
-	private _scaleRoot: cc.Node;
-	private _label: cc.RichText;
-	private _iconlabel: cc.Label;
-	private _icon: GameSprite;
-	private _iconNode: cc.Node;
-	private bg: cc.Node;
+	private item_node: cc.Node;
+	private msg_lb: cc.RichText;
+	private item_bg_node: cc.Node;
 
 	private _scaleTween: cc.Tween<cc.Node>;
 	private _moveTween: cc.Tween<cc.Node>;
@@ -29,55 +23,35 @@ export class PopMsgSubView extends EventSubView<PopViewEventType, PopMsgSubView>
 	public init(root: cc.Node) {
 		super.init(root);
 
-		this._scaleRoot = root;
-		this._label = this.ResBase.getComponent("Text", cc.RichText);
-		this._iconlabel = this.ResBase.getComponent("iconText", cc.Label);
-		this._icon = this.ResBase.getComponent("icon", GameSprite);
-		this._iconNode = this.ResBase.getNode("MsgScaleRoot");
-		this.bg = this.ResBase.getNode("bg");
+		this.item_node = root;
+		this.msg_lb = this.ResBase.getComponent("msg_lb", cc.RichText);
+		this.item_bg_node = this.ResBase.getNode("item_bg_node");
 	}
 
-	public play(info: string | IPopRewardMsg, x: number, y: number) {
+	public play(info: string, x: number, y: number) {
 		this._root.active = true;
 
-		if (typeof info == "string") {
-			this._iconNode.active = false;
-			this._label.node.active = true;
-			this._label.string = info;
-		} else {
-			this._iconNode.active = false;
-			this._label.node.active = false;
-			this._iconlabel.string = `${info.name}x${info.num}`;
-			const hex = POP_MSG_COLOR_TO_HEX[info.color] || "#ffffff";
-			this._iconlabel.node.color = new cc.Color().fromHEX(hex);
-			this._icon.source = info.icon;
-			if (info.icon != "") {
-				this._iconNode.active = true;
-			}
-		}
+		this.msg_lb.node.active = true;
+		this.msg_lb.string = info;
 
-		this._scaleRoot.height = this.root.children[0].height;
+		this.item_node.height = this.root.children[0].height;
 		this.root.setPosition(x, y);
-		this._scaleRoot.setScale(0, 0);
+		this.item_node.setScale(0, 0);
 
 		if (this._scaleTween != null) {
 			this._scaleTween.stop();
 			this._scaleTween = null;
 		}
 
-		this._scaleTween = cc.tween(this._scaleRoot);
+		this._scaleTween = cc.tween(this.item_node);
 		this._scaleTween.to(PopMsgSubView.ScaleTime, { scale: PopMsgSubView.ScaleTo }, { easing: EaseUtils.GetEaseFun(EaseType.OutBack) });
 		this._scaleTween.delay(PopMsgSubView.ScaleStayTime);
 		this._scaleTween.call(this.scaleDoneHandler.bind(this));
 		this._scaleTween.start();
 
 		TimeMgr.Ins.callFew(() => {
-			if (this.bg && this._iconNode && this._label) {
-				if (typeof info == "string") {
-					this.bg.height = this._label.node.height + 13;
-				} else {
-					this.bg.height = this._iconNode.height + 13;
-				}
+			if (this.item_bg_node && this.msg_lb) {
+				this.item_bg_node.height = this.msg_lb.node.height + 13;
 			}
 		});
 	}
@@ -105,11 +79,11 @@ export class PopMsgSubView extends EventSubView<PopViewEventType, PopMsgSubView>
 	}
 
 	public get height(): number {
-		return this._scaleRoot.height;
+		return this.item_node.height;
 	}
 
 	public get info(): string {
-		return this._label.string;
+		return this.msg_lb.string;
 	}
 
 	public impl() { }
@@ -127,6 +101,6 @@ export class PopMsgSubView extends EventSubView<PopViewEventType, PopMsgSubView>
 		}
 
 		this._root.active = false;
-		this._scaleRoot.setScale(1, 1);
+		this.item_node.setScale(1, 1);
 	}
 }

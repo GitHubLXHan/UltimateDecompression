@@ -1,0 +1,38 @@
+{
+  "ver": "2.3.7",
+  "uuid": "4556a986-dbac-4b5c-abf7-aa215fe5646e",
+  "importer": "texture",
+  "type": "sprite",
+  "wrapMode": "clamp",
+  "filterMode": "bilinear",
+  "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "width": 120,
+  "height": 120,
+  "platformSettings": {},
+  "subMetas": {
+    "common_icon_jinbi_shuimo": {
+      "ver": "1.0.6",
+      "uuid": "c222497b-ccfc-4880-a9ea-259edefb6342",
+      "importer": "sprite-frame",
+      "rawTextureUuid": "4556a986-dbac-4b5c-abf7-aa215fe5646e",
+      "trimType": "auto",
+      "trimThreshold": 1,
+      "rotated": false,
+      "offsetX": 2,
+      "offsetY": -0.5,
+      "trimX": 10,
+      "trimY": 7,
+      "width": 104,
+      "height": 107,
+      "rawWidth": 120,
+      "rawHeight": 120,
+      "borderTop": 0,
+      "borderBottom": 0,
+      "borderLeft": 0,
+      "borderRight": 0,
+      "subMetas": {}
+    }
+  }
+}

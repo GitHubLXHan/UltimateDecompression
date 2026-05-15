@@ -1,0 +1,38 @@
+{
+  "ver": "2.3.7",
+  "uuid": "0d69aec9-4f49-415e-87bc-712858a95ba1",
+  "importer": "texture",
+  "type": "sprite",
+  "wrapMode": "clamp",
+  "filterMode": "bilinear",
+  "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "width": 50,
+  "height": 109,
+  "platformSettings": {},
+  "subMetas": {
+    "fruit_lanmei2_shuimo": {
+      "ver": "1.0.6",
+      "uuid": "411b2d93-e008-4b53-b6f2-525f42eedea3",
+      "importer": "sprite-frame",
+      "rawTextureUuid": "0d69aec9-4f49-415e-87bc-712858a95ba1",
+      "trimType": "auto",
+      "trimThreshold": 1,
+      "rotated": false,
+      "offsetX": 1.5,
+      "offsetY": 0,
+      "trimX": 3,
+      "trimY": 6,
+      "width": 47,
+      "height": 97,
+      "rawWidth": 50,
+      "rawHeight": 109,
+      "borderTop": 0,
+      "borderBottom": 0,
+      "borderLeft": 0,
+      "borderRight": 0,
+      "subMetas": {}
+    }
+  }
+}

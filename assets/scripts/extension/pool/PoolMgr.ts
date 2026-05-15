@@ -1,12 +1,10 @@
 import { Dictionary } from "../basecore/Dictionary";
 import { List } from "../basecore/List";
-import { BaseProfiler } from "../profiler/BaseProfiler";
-import { BaseProfilerEventType } from "../profiler/BaseProfilerEventType";
 import { ClassUtils } from "../utils/ClassUtils";
 import { IPoolInstance } from "./IPoolInstance";
 
 
-export class PoolMgr extends BaseProfiler<BaseProfilerEventType> {
+export class PoolMgr  {
     private static _Ins: PoolMgr;
 
     public static get Ins(): PoolMgr {
@@ -15,10 +13,6 @@ export class PoolMgr extends BaseProfiler<BaseProfilerEventType> {
         }
 
         return this._Ins;
-    }
-
-    private constructor() {
-        super();
     }
 
     private _store: Dictionary<string, List<IPoolInstance>> = new Dictionary<string, List<IPoolInstance>>();
