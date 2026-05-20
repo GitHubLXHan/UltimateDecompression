@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod +x /Users/admin/Documents/Code/UltimateDecompression/tools/rename_all.sh)",
+      "Bash(bash /Users/admin/Documents/Code/UltimateDecompression/tools/rename_all.sh)",
+      "Bash(bash --version)",
+      "Bash(xargs -0 perl -pi -e ' *)"
+    ]
+  }
+}

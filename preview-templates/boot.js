@@ -90,8 +90,7 @@
 
     window.onload = function () {
         //此方法可以加载json
-        // loadAgent()
-        if (window.__quick_compile_engine__) {
+        if (window.__qsuick_compile_engine__) {
             window.__quick_compile_engine__.load(onload);
         }
         else {
@@ -287,16 +286,5 @@
     }
 
 
-    function loadAgent() {
-        var now = Date.now();
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', `agent.json?v=${now}`, true);
-        xhr.addEventListener("load", function () {
-            var agent = JSON.parse(xhr.response);
-            window.agent = agent
-        });
-        xhr.send(null);
-
-    }
 })();
 

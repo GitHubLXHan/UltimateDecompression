@@ -133,10 +133,11 @@ def process_file(path: Path) -> None:
 
 
 def main() -> int:
+    project = Path(__file__).resolve().parents[1]
     roots = [
-        Path(__file__).resolve().parents[1]
-        / "assets/bundles/module/watermelonMinGame/ui/auto",
-        Path(__file__).resolve().parents[1] / "assets/bundles/module/watermelonMinGame/ui",
+        project / "assets/bundles/module/watermelonMinGame/ui/auto",
+        project / "assets/bundles/module/watermelonMinGame/ui",
+        project / "assets/resources/ui",
     ]
     paths: list[Path] = []
     for root in roots:
