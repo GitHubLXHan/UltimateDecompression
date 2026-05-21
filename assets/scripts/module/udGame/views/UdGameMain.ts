@@ -26,11 +26,37 @@ const enum PlayPhase {
     Notified = 4,
 }
 
+/** Persisted fruit on board (hand = 当前待操作 / 下一个预览) */
+interface IUdGameSaveFruit {
+    id: number;
+    x: number;
+    y: number;
+    sx: number;
+    sy: number;
+    /** 0 static, 1 dynamic */
+    dyn: number;
+    vx: number;
+    vy: number;
+    hasFun: boolean;
+    hasContact: boolean;
+    /** 0 场上, 1 当前可操作, 2 预览位 */
+    hand: number;
+}
+
+interface IUdGameSave {
+    v: number;
+    spawnSequence: number[];
+    dropCount: number;
+    score: number;
+    fruits: IUdGameSaveFruit[];
+}
+
 @UdBindMeta
 export class UdGameMain extends UdFullView {
     // ---- cache keys ----
     private static readonly HIGHEST_SCORE_CACHE_KEY = "ud_best_v1";
     private static readonly PLAY_TOKEN_CACHE_KEY = "ud_tokens_v1";
+    private static readonly GAME_SAVE_CACHE_KEY = "ud_game_save_v1";
 
     // ---- serialized nodes ----
     fruit_prefab: cc.Node = undefined;
@@ -51,6 +77,11 @@ export class UdGameMain extends UdFullView {
     remaining_time_lb: UdLabel = undefined;
     add_time_btn: UdButton = undefined;
     setting_btn: UdButton = undefined;
+    record_btn: UdButton = undefined;
+    game_root: cc.Node = undefined;
+    ground_1: cc.Node = undefined;
+    ground_2_collider: cc.PhysicsBoxCollider = undefined;
+    ground_3_collider: cc.PhysicsBoxCollider = undefined;
 
     // ---- private nodes ----
     private skip_btn: UdButton;
@@ -96,6 +127,7 @@ export class UdGameMain extends UdFullView {
         super.init(root);
         this.__bootPhysics();
         this.__bindNodeRefs();
+        this._updateGroundSize(this.game_root.height);
     }
 
     private __bindNodeRefs(): void {
@@ -117,6 +149,11 @@ export class UdGameMain extends UdFullView {
         this.skip_btn = R.getComponent("skip_btn", UdButton);
         this.button_touch = R.getComponent("UdGameMain", UdButton);
         this.setting_btn = R.getComponent("setting_btn", UdButton);
+        this.record_btn = R.getComponent("record_btn", UdButton);
+        this.game_root = R.getNode("game_root");
+        this.ground_1 = R.getNode("ground_1");
+        this.ground_2_collider = R.getComponent("ground_2", cc.PhysicsBoxCollider);
+        this.ground_3_collider = R.getComponent("ground_3", cc.PhysicsBoxCollider);
     }
 
     protected addEvents(): void {
@@ -127,6 +164,9 @@ export class UdGameMain extends UdFullView {
         this.add_time_btn.addListener(UdBtnSignal.FingerTap, this.__onTokenAdd, this);
         UdPanelHub.Ins.addListener(UdPanelSignal.PanelHide, this.__onResultDismissed, this);
         this.setting_btn.addListener(UdBtnSignal.FingerTap, this.__onSettingTap, this);
+        if (this.record_btn != null) {
+            this.record_btn.addListener(UdBtnSignal.FingerTap, this.__onRecordTap, this);
+        }
     }
 
     protected removeEvents(): void {
@@ -137,6 +177,9 @@ export class UdGameMain extends UdFullView {
         this.add_time_btn.removeListener(UdBtnSignal.FingerTap, this.__onTokenAdd, this);
         UdPanelHub.Ins.removeListener(UdPanelSignal.PanelHide, this.__onResultDismissed, this);
         this.setting_btn.removeListener(UdBtnSignal.FingerTap, this.__onSettingTap, this);
+        if (this.record_btn != null) {
+            this.record_btn.removeListener(UdBtnSignal.FingerTap, this.__onRecordTap, this);
+        }
     }
 
     public updateView(arg?: any): void {
@@ -247,6 +290,7 @@ export class UdGameMain extends UdFullView {
     }
 
     private __bootstrapRound(): void {
+        this._updateGroundSize(this.game_root.height);
         this.__buildSpawnSequence();
         this.__trySpawnNextFruit();
     }
@@ -551,6 +595,8 @@ export class UdGameMain extends UdFullView {
         if (this.__phase === PlayPhase.Notified) return;
         this.__phase = PlayPhase.Notified;
 
+        this.__clearSave();
+
         const payload: IUdGameScore = {
             num: this.__score,
             enterMainGame,
@@ -570,6 +616,160 @@ export class UdGameMain extends UdFullView {
         UdPanelHub.Ins.open(UdSettingView, UdLayerKind.Panel);
     }
 
+    // ==================== SAVE / LOAD ====================
+
+    private __canSaveNow(): boolean {
+        return this.__phase === PlayPhase.Running
+            || this.__phase === PlayPhase.Spawning
+            || this.__phase === PlayPhase.Finished;
+    }
+
+    private __readGameSave(): IUdGameSave | null {
+        try {
+            const raw = cc.sys.localStorage.getItem(UdGameMain.GAME_SAVE_CACHE_KEY);
+            if (raw == null || raw === "") return null;
+            const o = JSON.parse(raw) as IUdGameSave;
+            if (o == null || o.v !== 1 || !Array.isArray(o.spawnSequence)) return null;
+            if (!Array.isArray(o.fruits)) return null;
+            return o;
+        } catch {
+            return null;
+        }
+    }
+
+    private __writeGameSave(data: IUdGameSave): void {
+        cc.sys.localStorage.setItem(UdGameMain.GAME_SAVE_CACHE_KEY, JSON.stringify(data));
+    }
+
+    private __clearSave(): void {
+        cc.sys.localStorage.removeItem(UdGameMain.GAME_SAVE_CACHE_KEY);
+    }
+
+    private __serializeBoard(): IUdGameSave {
+        const fruits: IUdGameSaveFruit[] = [];
+        const content = this.fruit_content_node;
+        if (content) {
+            for (let i = 0; i < content.children.length; i++) {
+                const node = content.children[i];
+                const block = node.getComponent(UdFruitBlock);
+                if (!block) continue;
+                const rb = node.getComponent(cc.RigidBody);
+                const isDyn = rb != null && rb.type === cc.RigidBodyType.Dynamic;
+                const lv = rb != null ? rb.linearVelocity : cc.v2(0, 0);
+                let hand = 0;
+                if (node === this.__activeFruit) hand = 1;
+                else if (node === this.__pendingFruit) hand = 2;
+                fruits.push({
+                    id: block.id,
+                    x: node.x,
+                    y: node.y,
+                    sx: node.scaleX,
+                    sy: node.scaleY,
+                    dyn: isDyn ? 1 : 0,
+                    vx: lv.x,
+                    vy: lv.y,
+                    hasFun: block.hasFun,
+                    hasContact: block.hasContact,
+                    hand,
+                });
+            }
+        }
+        return {
+            v: 1,
+            spawnSequence: this.__spawnSequence.slice(),
+            dropCount: this.__dropCount,
+            score: this.__score,
+            fruits,
+        };
+    }
+
+    private __detachAllFruitsFromField(): void {
+        const content = this.fruit_content_node;
+        if (!content) return;
+        while (content.children.length > 0) {
+            this.__enqueueFruit(content.children[0]);
+        }
+        this.__activeFruit = undefined;
+        this.__pendingFruit = undefined;
+    }
+
+    private __spawnFruitFromSnapshot(s: IUdGameSaveFruit): cc.Node {
+        const fruit = this.__instantiateFruit(s.x, s.y, s.id);
+        fruit.setScale(s.sx, s.sy);
+        const block = fruit.getComponent(UdFruitBlock);
+        block.setData({
+            id: s.id,
+            source: `udGame/ui/auto/fruit_${this.__fruitLabels[s.id]}_shuimo`,
+            size: this.__fruitScaledSizes[s.id],
+            hasFun: s.hasFun,
+            hasContact: s.hasContact,
+        });
+        if (s.dyn === 1) {
+            this.__enableFruitPhysics(fruit);
+            const rb = fruit.getComponent(cc.RigidBody);
+            if (rb != null) {
+                rb.linearVelocity = cc.v2(s.vx, s.vy);
+            }
+        }
+        return fruit;
+    }
+
+    private __applyGameSave(save: IUdGameSave): void {
+        this.__purgeTimers();
+        this.__spawnSequence = save.spawnSequence.slice();
+        this.__dropCount = save.dropCount;
+        this.__score = save.score;
+
+        this.__detachAllFruitsFromField();
+
+        this.__phase = PlayPhase.Running;
+        this.preview_info_node.active = false;
+        this.score_node_h.active = false;
+        this.score_node.active = true;
+        this.skip_btn.node.active = true;
+
+        let active: cc.Node = undefined;
+        let pending: cc.Node = undefined;
+        for (let i = 0; i < save.fruits.length; i++) {
+            const node = this.__spawnFruitFromSnapshot(save.fruits[i]);
+            if (save.fruits[i].hand === 1) active = node;
+            if (save.fruits[i].hand === 2) pending = node;
+        }
+        this.__activeFruit = active;
+        this.__pendingFruit = pending;
+
+        if (save.fruits.length === 0) {
+            this.__trySpawnNextFruit();
+        }
+
+        this.__applyScoreBadge();
+    }
+
+    private __onRecordTap(): void {
+        if (this.__phase === PlayPhase.Idle) {
+            const save = this.__readGameSave();
+            if (save != null) {
+                this.__applyGameSave(save);
+                UdToastHub.Ins.show("已读取存档");
+            } else {
+                this.__onStartTap();
+            }
+            return;
+        }
+
+        if (!this.__canSaveNow()) {
+            return;
+        }
+
+        const payload = this.__serializeBoard();
+        this.__writeGameSave(payload);
+
+        this.__purgeTimers();
+        this.__resetState();
+        this.__enterIdleUI();
+        UdToastHub.Ins.show("已存档");
+    }
+
     // ==================== TIMER CLEANUP ====================
 
     private __purgeTimers(): void {
@@ -585,4 +785,16 @@ export class UdGameMain extends UdFullView {
         this.__recycleAllFruit();
         this.__resetRedLine();
     }
+
+    private _updateGroundSize(height: number) {
+        this.game_root.height = height;
+        this.game_root.getComponent(cc.Widget).updateAlignment();
+        this.ground_2_collider.node.height = height;
+        this.ground_2_collider.size = cc.size(200, height);
+        this.ground_3_collider.node.height = height;
+        this.ground_3_collider.size = cc.size(200, height);
+    }
+    
+
+
 }

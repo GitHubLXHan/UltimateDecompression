@@ -1,4 +1,6 @@
 {
 	"externalResPath": "ext-res",
-	"nativeExtResIsRemote": true
+	"simulateExtBundleRoot": "http://localhost:7456",
+	"nativeExtResIsRemote": true,
+	"version": "2.1.7"
 }

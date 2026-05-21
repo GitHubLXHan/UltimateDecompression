@@ -10,6 +10,7 @@ import { UdGameMain } from "./module/udGame/views/UdGameMain";
 import { UdCoreKit } from "./extension/utils/UdCoreKit";
 import { UdTimerHub } from "./extension/time/UdTimerHub";
 import { UdToastView } from "./module/udToastMessage/UdToastView";
+import { UdReflectKit } from "./extension/utils/UdReflectKit";
 
 const { ccclass } = cc._decorator;
 
@@ -115,4 +116,14 @@ export class UdAppEntry extends cc.Component {
 		}
 
 	}
+
+
+	public initDebug() {
+			this.addDebug(UdReflectKit.getClassName(UdPanelHub), UdPanelHub.Ins);
+	}
+
+	private addDebug(name: string, fun: any) {
+		(<any>window)[name] = fun;
+	}
+
 }
