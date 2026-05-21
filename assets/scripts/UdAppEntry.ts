@@ -11,6 +11,7 @@ import { UdCoreKit } from "./extension/utils/UdCoreKit";
 import { UdTimerHub } from "./extension/time/UdTimerHub";
 import { UdToastView } from "./module/udToastMessage/UdToastView";
 import { UdReflectKit } from "./extension/utils/UdReflectKit";
+import { UdHintingView } from "./module/UdHinting/views/UdHintingView";
 
 const { ccclass } = cc._decorator;
 
@@ -100,6 +101,7 @@ export class UdAppEntry extends cc.Component {
 
 		let openGame = () => {
 			UdPanelHub.Ins.open(UdGameMain, UdLayerKind.Panel);
+            UdPanelHub.Ins.open(UdHintingView, UdLayerKind.Hint);
 		}
 
 		let loadMain = (<any>window).loadMain;
