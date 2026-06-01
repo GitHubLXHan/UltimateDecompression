@@ -1,0 +1,38 @@
+{
+  "ver": "2.3.7",
+  "uuid": "74ec1be5-9735-4477-aaef-4d9ab388f3cc",
+  "importer": "texture",
+  "type": "sprite",
+  "wrapMode": "clamp",
+  "filterMode": "bilinear",
+  "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "width": 128,
+  "height": 128,
+  "platformSettings": {},
+  "subMetas": {
+    "ui_mibao_changtai_01": {
+      "ver": "1.0.6",
+      "uuid": "517a55a8-e12d-4295-8aea-de808d3c8cdc",
+      "importer": "sprite-frame",
+      "rawTextureUuid": "74ec1be5-9735-4477-aaef-4d9ab388f3cc",
+      "trimType": "auto",
+      "trimThreshold": 1,
+      "rotated": false,
+      "offsetX": -24.5,
+      "offsetY": 10.5,
+      "trimX": 2,
+      "trimY": 30,
+      "width": 75,
+      "height": 47,
+      "rawWidth": 128,
+      "rawHeight": 128,
+      "borderTop": 0,
+      "borderBottom": 0,
+      "borderLeft": 0,
+      "borderRight": 0,
+      "subMetas": {}
+    }
+  }
+}

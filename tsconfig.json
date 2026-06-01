@@ -3,10 +3,12 @@
     "module": "commonjs",
     "lib": [ "es2015", "es2017", "dom" ],
     "target": "es5",
+    "ignoreDeprecations": "6.0",
     "experimentalDecorators": true,
     "skipLibCheck": true,
     "outDir": "temp/vscode-dist",
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+			"strict": false
   },
   "exclude": [
     "node_modules",

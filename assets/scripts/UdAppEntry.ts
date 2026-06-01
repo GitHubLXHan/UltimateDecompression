@@ -11,7 +11,9 @@ import { UdCoreKit } from "./extension/utils/UdCoreKit";
 import { UdTimerHub } from "./extension/time/UdTimerHub";
 import { UdToastView } from "./module/udToastMessage/UdToastView";
 import { UdReflectKit } from "./extension/utils/UdReflectKit";
+import { UdHintingHub } from "./module/UdHinting/UdHintingHub";
 import { UdHintingView } from "./module/UdHinting/views/UdHintingView";
+import { UdComboPraiseHub } from "./module/udGame/combo/UdComboPraiseHub";
 
 const { ccclass } = cc._decorator;
 
@@ -44,6 +46,9 @@ export class UdAppEntry extends cc.Component {
 
 		UdPanelHub.Ins.init(viewRoot, UdAssetPathKit.ViewPrefabPath, this._width, viewRoot.height, CC_DEBUG ? 5 : 60);
 		UdToastHub.Ins.init(UdToastView, UdPanelHub.Ins);
+		UdHintingHub.Ins.init(UdHintingView, UdPanelHub.Ins);
+		// 【测试】每次启动清空指引记录；上线后注释掉下一行
+		UdHintingHub.Ins.clearTestPersistence();
 		UdAudioHub.Ins.init(
 			UdAssetPathKit.getBgmPath(""),
 			UdAssetPathKit.getSoundPath(""),
@@ -100,8 +105,10 @@ export class UdAppEntry extends cc.Component {
 	private openUdGame() {
 
 		let openGame = () => {
+			this.initDebug();
 			UdPanelHub.Ins.open(UdGameMain, UdLayerKind.Panel);
-            UdPanelHub.Ins.open(UdHintingView, UdLayerKind.Hint);
+			UdPanelHub.Ins.open(UdHintingView, UdLayerKind.Hint);
+			UdHintingHub.Ins.onTrigger("appStart");
 		}
 
 		let loadMain = (<any>window).loadMain;
@@ -121,7 +128,10 @@ export class UdAppEntry extends cc.Component {
 
 
 	public initDebug() {
+		if (CC_DEBUG) {
 			this.addDebug(UdReflectKit.getClassName(UdPanelHub), UdPanelHub.Ins);
+			this.addDebug(UdReflectKit.getClassName(UdComboPraiseHub), UdComboPraiseHub.Ins);
+		}
 	}
 
 	private addDebug(name: string, fun: any) {

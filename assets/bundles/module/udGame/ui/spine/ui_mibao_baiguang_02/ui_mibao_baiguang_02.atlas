@@ -1,0 +1,27 @@
+
+ui_mibao_baiguang_02.png
+size: 512, 512
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+guangdian
+  rotate: false
+  xy: 2, 2
+  size: 51, 47
+  orig: 720, 1280
+  offset: 335, 620
+  index: -1
+guangmang_00000
+  rotate: false
+  xy: 2, 51
+  size: 310, 329
+  orig: 720, 1280
+  offset: 208, 725
+  index: -1
+xingxing
+  rotate: true
+  xy: 55, 14
+  size: 35, 38
+  orig: 720, 1280
+  offset: 376, 621
+  index: -1

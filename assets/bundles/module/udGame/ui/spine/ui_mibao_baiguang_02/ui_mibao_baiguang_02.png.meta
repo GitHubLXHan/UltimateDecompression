@@ -1,0 +1,38 @@
+{
+  "ver": "2.3.7",
+  "uuid": "da712733-5433-4a88-a69a-e2a614aab6ed",
+  "importer": "texture",
+  "type": "sprite",
+  "wrapMode": "clamp",
+  "filterMode": "bilinear",
+  "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "width": 512,
+  "height": 512,
+  "platformSettings": {},
+  "subMetas": {
+    "ui_mibao_baiguang_02": {
+      "ver": "1.0.6",
+      "uuid": "642590c4-2c93-41e4-80c9-fe3cb4d1dfc8",
+      "importer": "sprite-frame",
+      "rawTextureUuid": "da712733-5433-4a88-a69a-e2a614aab6ed",
+      "trimType": "auto",
+      "trimThreshold": 1,
+      "rotated": false,
+      "offsetX": -99.5,
+      "offsetY": 64.5,
+      "trimX": 2,
+      "trimY": 3,
+      "width": 309,
+      "height": 377,
+      "rawWidth": 512,
+      "rawHeight": 512,
+      "borderTop": 0,
+      "borderBottom": 0,
+      "borderLeft": 0,
+      "borderRight": 0,
+      "subMetas": {}
+    }
+  }
+}

@@ -353,6 +353,6 @@ export class UdPanelHub extends UdPanelHubCore {
 
 
 
-if (CC_DEBUG) {
-	(<any>window).UdPanelHub = UdPanelHub;
-}
+// if (CC_DEBUG) {
+// 	(<any>window).UdPanelHub = UdPanelHub;
+// }

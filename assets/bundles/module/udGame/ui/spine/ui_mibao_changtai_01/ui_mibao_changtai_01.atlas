@@ -1,0 +1,20 @@
+
+ui_mibao_changtai_01.png
+size: 128, 128
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+guangdian
+  rotate: false
+  xy: 2, 30
+  size: 51, 47
+  orig: 720, 1280
+  offset: 335, 620
+  index: -1
+xiaoyuandian
+  rotate: true
+  xy: 55, 54
+  size: 23, 22
+  orig: 720, 1280
+  offset: 348, 630
+  index: -1

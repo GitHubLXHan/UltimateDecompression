@@ -1,5 +1,6 @@
 import { UdAudioHub } from "../audio/UdAudioHub";
 import { UdHapticHub } from "../haptic/UdHapticHub";
+import { UdHintingHub } from "../../module/UdHinting/UdHintingHub";
 import { UdBtnSignal } from "../components/GameBtn/UdBtnSignal";
 import { UdGrayMask } from "../components/UdGrayMask";
 import { UdNodeSignal } from "../eventListener/UdNodeSignal";
@@ -60,7 +61,16 @@ export class UdButton extends UdNodeSignal<UdBtnSignal, UdButton> {
         this._nodeEnable = false;
     }
 
+    /** 强制指引期间仅允许点击当前步骤目标按钮 */
+    private __isBlockedByForceGuide(): boolean {
+        return UdHintingHub.Ins.isForceGuiding()
+            && !UdHintingHub.Ins.isCurrentTargetNode(this.node);
+    }
+
     private cancelHandler(event: cc.Event.EventTouch) {
+        if (this.__isBlockedByForceGuide()) {
+            return;
+        }
         //由scrollerView触发的模拟cancel事件会设置simulate=true
         if (!(<any>event).simulate) {
             if (this._checkTouchIn(event) && this.isTheBeginTouchItem) {
@@ -78,6 +88,9 @@ export class UdButton extends UdNodeSignal<UdBtnSignal, UdButton> {
     }
 
     private onTouchHandler(event: cc.Event.EventTouch) {
+        if (this.__isBlockedByForceGuide()) {
+            return;
+        }
         let now = new Date().getTime();
         this.playTween(this.Scale * this._originalScaleX, this.Scale * this._originalScaleY);
         this.dispatchEvent(UdBtnSignal.FingerDown, event);
@@ -87,6 +100,9 @@ export class UdButton extends UdNodeSignal<UdBtnSignal, UdButton> {
     }
 
     private touchEndHandler(event: cc.Event.EventTouch) {
+        if (this.__isBlockedByForceGuide()) {
+            return;
+        }
         this.playTween(this._originalScaleX, this._originalScaleY);
         this.dispatchEvent(UdBtnSignal.FingerUp, event);
         if (this.isTheBeginTouchItem) {

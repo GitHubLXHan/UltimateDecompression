@@ -16,6 +16,8 @@ import { UdFruitBlock } from "../items/UdFruitBlock";
 import { IUdGameScore, UdGameResult } from "./UdGameResult";
 import { UdSettingView } from "../../udSetting/UdSettingView";
 import { UdHapticHub } from "../../../extension/haptic/UdHapticHub";
+import { UdHintingHub } from "../../UdHinting/UdHintingHub";
+import { UdComboPraiseHub } from "../combo/UdComboPraiseHub";
 
 /** Game play state enum */
 const enum PlayPhase {
@@ -57,6 +59,8 @@ export class UdGameMain extends UdFullView {
     private static readonly HIGHEST_SCORE_CACHE_KEY = "ud_best_v1";
     private static readonly PLAY_TOKEN_CACHE_KEY = "ud_tokens_v1";
     private static readonly GAME_SAVE_CACHE_KEY = "ud_game_save_v1";
+    private static readonly COMBO_WINDOW_SEC = 1.2;
+    private static readonly COMBO_MIN = 2;
 
     // ---- serialized nodes ----
     fruit_prefab: cc.Node = undefined;
@@ -116,6 +120,10 @@ export class UdGameMain extends UdFullView {
     __rawConfig = undefined;
     __playTokens: number = 0;
 
+    /** 连续合成计数（窗口内） */
+    private __comboCount = 0;
+    private __comboResetTimer = -1;
+
     // ==================== LIFECYCLE ====================
 
     public constructor() {
@@ -128,6 +136,7 @@ export class UdGameMain extends UdFullView {
         this.__bootPhysics();
         this.__bindNodeRefs();
         this._updateGroundSize(this.game_root.height);
+        UdComboPraiseHub.Ins.init(this.root);
     }
 
     private __bindNodeRefs(): void {
@@ -207,6 +216,10 @@ export class UdGameMain extends UdFullView {
         this.__enterIdleUI();
         this.__prewarmFruitCache();
         this.__syncTokenDisplay();
+        UdHintingHub.Ins.onTrigger("viewReady", {
+            view: "UdGameMain",
+            gamePhase: "idle",
+        });
     }
 
     // ==================== STATE RESET ====================
@@ -218,6 +231,28 @@ export class UdGameMain extends UdFullView {
         this.__pendingFruit = undefined;
         this.__dropCount = 0;
         this.skip_btn.node.active = false;
+        this.__resetCombo();
+        UdComboPraiseHub.Ins.hide();
+    }
+
+    private __bumpCombo(): number {
+        this.__comboCount++;
+        if (this.__comboResetTimer >= 0) {
+            UdTimerHub.Ins.remove(this.__comboResetTimer);
+        }
+        this.__comboResetTimer = UdTimerHub.Ins.callLater(UdGameMain.COMBO_WINDOW_SEC, () => {
+            this.__comboCount = 0;
+            this.__comboResetTimer = -1;
+        });
+        return this.__comboCount;
+    }
+
+    private __resetCombo(): void {
+        this.__comboCount = 0;
+        if (this.__comboResetTimer >= 0) {
+            UdTimerHub.Ins.remove(this.__comboResetTimer);
+            this.__comboResetTimer = -1;
+        }
     }
 
     private __computeScaledSizes(): void {
@@ -239,6 +274,12 @@ export class UdGameMain extends UdFullView {
         this.score_node.active = false;
         this.score_lb_h.string = this.__loadBestScore().toString();
         this.__applyScoreBadge();
+        UdTimerHub.Ins.callFew(() => {
+            UdHintingHub.Ins.onTrigger("gameIdle", {
+                view: "UdGameMain",
+                gamePhase: "idle",
+            });
+        });
     }
 
     // ==================== PHYSICS SETUP ====================
@@ -258,8 +299,8 @@ export class UdGameMain extends UdFullView {
     private __syncTokenDisplay(): void {
         let raw = cc.sys.localStorage.getItem(UdGameMain.PLAY_TOKEN_CACHE_KEY);
         let tokens = Number(raw);
-        if (tokens === undefined || isNaN(tokens)) {
-            tokens = 1;
+        if (raw == null || isNaN(Number(raw))) {
+            tokens = 999;
             this.__persistTokens(tokens);
             return;
         }
@@ -286,6 +327,7 @@ export class UdGameMain extends UdFullView {
         this.score_node_h.active = false;
         this.score_node.active = true;
         this.skip_btn.node.active = true;
+        UdHintingHub.Ins.onTrigger("gameRunning", { gamePhase: "running" });
         this.__bootstrapRound();
     }
 
@@ -390,6 +432,7 @@ export class UdGameMain extends UdFullView {
     // ==================== TOUCH HANDLING ====================
 
     private __onScreenTap(target: any, args: any[]): void {
+        if (UdHintingHub.Ins.isForceGuiding()) return;
         if (this.__phase !== PlayPhase.Running) return;
         if (this.__activeFruit === undefined) return;
 
@@ -442,6 +485,11 @@ export class UdGameMain extends UdFullView {
 
             // Play merge vfx
             this.__playMergeEffect(upgradeId, cc.v2(mx, my), other.node.width);
+
+            const combo = this.__bumpCombo();
+            if (combo >= UdGameMain.COMBO_MIN) {
+                UdComboPraiseHub.Ins.show(combo);
+            }
 
             // Spawn upgraded fruit on next frame
             UdTimerHub.Ins.callFew(() => {
@@ -566,6 +614,18 @@ export class UdGameMain extends UdFullView {
 
     private __applyScoreBadge(): void {
         this.score_lb.string = `${this.__score}`;
+        this.__tryHintOnScore();
+    }
+
+    /** 本局积分变化时尝试触发依赖 minScore 的指引 */
+    private __tryHintOnScore(): void {
+        if (this.__phase !== PlayPhase.Running) {
+            return;
+        }
+        UdHintingHub.Ins.onTrigger("gameScore", {
+            gamePhase: "running",
+            score: this.__score,
+        });
     }
 
     private __loadBestScore(): number {
@@ -609,6 +669,7 @@ export class UdGameMain extends UdFullView {
         const clsName = args[0];
         if (clsName && clsName === UdReflectKit.getClassName(UdGameResult)) {
             this.updateView();
+            UdHintingHub.Ins.onTrigger("gameResultClosed", { gamePhase: "idle" });
         }
     }
 
@@ -752,7 +813,8 @@ export class UdGameMain extends UdFullView {
                 this.__applyGameSave(save);
                 UdToastHub.Ins.show("已读取存档");
             } else {
-                this.__onStartTap();
+                // this.__onStartTap();
+                UdToastHub.Ins.show("暂无存档");
             }
             return;
         }

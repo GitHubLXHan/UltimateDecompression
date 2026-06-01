@@ -137,6 +137,7 @@ def main() -> int:
     roots = [
         project / "assets/bundles/module/watermelonMinGame/ui/auto",
         project / "assets/bundles/module/watermelonMinGame/ui",
+        project / "assets/bundles/module/udGame/ui/auto",
         project / "assets/resources/ui",
     ]
     paths: list[Path] = []
