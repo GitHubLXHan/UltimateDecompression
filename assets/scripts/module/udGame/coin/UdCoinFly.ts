@@ -216,10 +216,10 @@ export class UdCoinFly implements IUdTickable {
         }
         if (coin.targetNode && cc.isValid(coin.targetNode)) {
             cc.Tween.stopAllByTarget(coin.targetNode);
-            coin.targetNode.scale = 1 * coin.scaleRatio;
+            coin.targetNode.scale = 1;
             cc.tween(coin.targetNode)
-                .to(0.06, { scale: 1.15 * coin.scaleRatio }, { easing: cc.easing.backOut })
-                .to(0.1, { scale: 1 * coin.scaleRatio })
+                .to(0.06, { scale: 1.5 }, { easing: cc.easing.backOut })
+                .to(0.1, { scale: 1 })
                 .start();
         }
         coin.node.destroy();
