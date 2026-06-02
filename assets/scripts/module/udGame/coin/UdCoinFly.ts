@@ -28,6 +28,7 @@ class CoinFlyData {
     targetLabel: UdMathLabel;
     targetNode: cc.Node;
     scorePerCoin: number;
+    scaleRatio: number;
 }
 
 export class UdCoinFly implements IUdTickable {
@@ -41,14 +42,13 @@ export class UdCoinFly implements IUdTickable {
         scorePerCoin: number,
         idx: number,
         total: number,
+        scaleRatio: number = 0.5,
     ): void {
-        console.log("[UdCoinFly] spawn idx=", idx, "total=", total);
         if (!UdCoinFly._ins) {
             UdCoinFly._ins = new UdCoinFly();
             UdTickHub.Ins.addUpdateHandler(UdCoinFly._ins);
-            console.log("[UdCoinFly] registered tick handler");
         }
-        UdCoinFly._ins._createCoin(parent, fromWorld, toNode, scorePerCoin, idx, total);
+        UdCoinFly._ins._createCoin(parent, fromWorld, toNode, scorePerCoin, idx, total, scaleRatio);
     }
 
     private _coins: CoinFlyData[] = [];
@@ -60,11 +60,9 @@ export class UdCoinFly implements IUdTickable {
         scorePerCoin: number,
         idx: number,
         total: number,
+        scaleRatio: number,
     ): void {
-        if (!cc.isValid(parent)) {
-            console.warn("[UdCoinFly] parent invalid");
-            return;
-        }
+        if (!cc.isValid(parent)) return;
 
         const node = new cc.Node("coin_fly");
         const sprite = node.addComponent(UdSprite);
@@ -81,6 +79,7 @@ export class UdCoinFly implements IUdTickable {
         const coin = new CoinFlyData();
         coin.node = node;
         coin.burstFrom = localFrom;
+        coin.scaleRatio = scaleRatio;
 
         const burstAngle = (idx / total) * Math.PI * 2 + UdRandomKit.getRandomNumber(-0.3, 0.3);
         const burstDist = UdRandomKit.getRandomNumber(60, 140);
@@ -88,7 +87,7 @@ export class UdCoinFly implements IUdTickable {
             localFrom.x + Math.cos(burstAngle) * burstDist,
             localFrom.y + Math.sin(burstAngle) * burstDist + UdRandomKit.getRandomNumber(20, 60),
         );
-        coin.burstDuration = UdRandomKit.getRandomNumber(0.15, 0.25);
+        coin.burstDuration = UdRandomKit.getRandomNumber(0.25, 0.35);
 
         const localTo = parent.convertToNodeSpaceAR(
             toNode.parent.convertToWorldSpaceAR(toNode.getPosition()),
@@ -104,14 +103,9 @@ export class UdCoinFly implements IUdTickable {
         coin.scorePerCoin = scorePerCoin;
 
         this._coins.push(coin);
-        console.log("[UdCoinFly] coin created, total coins=", this._coins.length);
     }
 
     onUpdate(dt: number): void {
-        if (this._coins.length > 0) {
-            // 只在新的一批有金币时打印一次
-        }
-
         for (let i = this._coins.length - 1; i >= 0; i--) {
             const coin = this._coins[i];
 
@@ -125,10 +119,12 @@ export class UdCoinFly implements IUdTickable {
             switch (coin.phase) {
                 case Phase.Burst: this._tickBurst(coin); break;
                 case Phase.Pause: this._tickPause(coin); break;
-                case Phase.Fly:   this._tickFly(coin, dt);   break;
+                case Phase.Fly: this._tickFly(coin, dt); break;
             }
         }
     }
+
+    // ============ Burst — 翻牌弹出 ============
 
     private _tickBurst(coin: CoinFlyData): void {
         const t = Math.min(coin.elapsed / coin.burstDuration, 1.0);
@@ -138,12 +134,21 @@ export class UdCoinFly implements IUdTickable {
             coin.burstFrom.x + (coin.burstTarget.x - coin.burstFrom.x) * ease,
             coin.burstFrom.y + (coin.burstTarget.y - coin.burstFrom.y) * ease,
         ));
-        coin.node.scale = t * 1.2;
+
+        const scale = t * 1.2 * coin.scaleRatio;
+        coin.node.scaleY = scale;
         coin.node.opacity = Math.floor(t * 255);
-        coin.node.angle = t * 360;
+
+        const flipT = t * 2;
+        const scaleX = Math.cos(flipT * Math.PI) * -1 * coin.scaleRatio;
+        coin.node.scaleX = scaleX;
+
+        coin.node.skewY = (1 - t) * 15 * (Math.random() > 0.5 ? 1 : -1);
 
         if (t >= 1.0) {
-            coin.node.scale = 1.0;
+            coin.node.scaleX = 1 * coin.scaleRatio;
+            coin.node.scaleY = 1 * coin.scaleRatio;
+            coin.node.skewY = 0;
             coin.node.opacity = 255;
             coin.elapsed = 0;
             coin.p0 = coin.node.getPosition();
@@ -152,14 +157,18 @@ export class UdCoinFly implements IUdTickable {
         }
     }
 
+    // ============ Pause ============
+
     private _tickPause(coin: CoinFlyData): void {
-        coin.node.scale = 1.0 + 0.04 * Math.sin(coin.elapsed * 3);
+        coin.node.scale = (1.0 + 0.04 * Math.sin(coin.elapsed * 3)) * coin.scaleRatio;
 
         if (coin.elapsed >= coin.pauseDuration) {
             coin.elapsed = 0;
             coin.phase = Phase.Fly;
         }
     }
+
+    // ============ Fly ============
 
     private _tickFly(coin: CoinFlyData, dt: number): void {
         const t = Math.min(coin.elapsed / coin.flyDuration, 1.0);
@@ -174,7 +183,7 @@ export class UdCoinFly implements IUdTickable {
             uuu * coin.p0.x + 3 * uu * t * coin.p1.x + 3 * u * tt * coin.p2.x + ttt * coin.p3.x,
             uuu * coin.p0.y + 3 * uu * t * coin.p1.y + 3 * u * tt * coin.p2.y + ttt * coin.p3.y,
         ));
-        coin.node.scale = 1.0 - t * 0.45;
+        coin.node.scale = (1.0 - t * 0.45) * coin.scaleRatio;
         coin.node.angle += dt * 180;
 
         if (t >= 1.0) {
@@ -207,10 +216,10 @@ export class UdCoinFly implements IUdTickable {
         }
         if (coin.targetNode && cc.isValid(coin.targetNode)) {
             cc.Tween.stopAllByTarget(coin.targetNode);
-            coin.targetNode.scale = 1;
+            coin.targetNode.scale = 1 * coin.scaleRatio;
             cc.tween(coin.targetNode)
-                .to(0.06, { scale: 1.15 }, { easing: cc.easing.backOut })
-                .to(0.1, { scale: 1 })
+                .to(0.06, { scale: 1.15 * coin.scaleRatio }, { easing: cc.easing.backOut })
+                .to(0.1, { scale: 1 * coin.scaleRatio })
                 .start();
         }
         coin.node.destroy();
