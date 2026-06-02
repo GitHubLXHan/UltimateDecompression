@@ -522,13 +522,15 @@ export class UdGameMain extends UdFullView {
                             scorePerCoin,
                             i,
                             coinCount,
+                            0.5
                         );
                     }
                 }
 
-                // Base score (kept for save/display consistency)
+                // Score tracked for save / game-over, display updated by coin batch
                 this.__score += earnedScore;
-                this.__applyScoreBadge();
+                this.__tryHintOnScore();
+
             });
         }
     }

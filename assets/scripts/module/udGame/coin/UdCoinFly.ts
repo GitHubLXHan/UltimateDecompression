@@ -25,15 +25,24 @@ class CoinFlyData {
     p3: cc.Vec2;
     flyDuration: number;
 
-    targetLabel: UdMathLabel;
-    targetNode: cc.Node;
     scorePerCoin: number;
-    scaleRatio: number;
+    scaleRatio: number = 1;
+    batchId: number = 0;
 }
 
 export class UdCoinFly implements IUdTickable {
 
     private static _ins: UdCoinFly;
+    private static _batchIdGen: number = 0;
+
+    private _targetLabel: UdMathLabel | null = null;
+    private _targetNode: cc.Node | null = null;
+    private _pendingScore: number = 0;
+    private _currentBatchId: number = -1;
+
+    private _coins: CoinFlyData[] = [];
+
+    // ============ 公开接口 ============
 
     static spawn(
         parent: cc.Node,
@@ -42,7 +51,7 @@ export class UdCoinFly implements IUdTickable {
         scorePerCoin: number,
         idx: number,
         total: number,
-        scaleRatio: number = 0.5,
+        scaleRatio: number,
     ): void {
         if (!UdCoinFly._ins) {
             UdCoinFly._ins = new UdCoinFly();
@@ -51,7 +60,7 @@ export class UdCoinFly implements IUdTickable {
         UdCoinFly._ins._createCoin(parent, fromWorld, toNode, scorePerCoin, idx, total, scaleRatio);
     }
 
-    private _coins: CoinFlyData[] = [];
+    // ============ 内部实现 ============
 
     private _createCoin(
         parent: cc.Node,
@@ -63,6 +72,17 @@ export class UdCoinFly implements IUdTickable {
         scaleRatio: number,
     ): void {
         if (!cc.isValid(parent)) return;
+
+        // 每批次的第一枚金币重置 batch 状态
+        if (idx === 0) {
+            // 上一批如果还有未结算的分数，先结算
+            this._commitScore();
+
+            this._currentBatchId = ++UdCoinFly._batchIdGen;
+            this._pendingScore = 0;
+            this._targetLabel = toNode.getComponent(UdMathLabel);
+            this._targetNode = toNode;
+        }
 
         const node = new cc.Node("coin_fly");
         const sprite = node.addComponent(UdSprite);
@@ -80,6 +100,8 @@ export class UdCoinFly implements IUdTickable {
         coin.node = node;
         coin.burstFrom = localFrom;
         coin.scaleRatio = scaleRatio;
+        coin.scorePerCoin = scorePerCoin;
+        coin.batchId = this._currentBatchId;
 
         const burstAngle = (idx / total) * Math.PI * 2 + UdRandomKit.getRandomNumber(-0.3, 0.3);
         const burstDist = UdRandomKit.getRandomNumber(60, 140);
@@ -98,14 +120,14 @@ export class UdCoinFly implements IUdTickable {
         );
         coin.flyDuration = UdRandomKit.getRandomNumber(0.45, 0.7);
 
-        coin.targetLabel = toNode.getComponent(UdMathLabel);
-        coin.targetNode = toNode;
-        coin.scorePerCoin = scorePerCoin;
-
         this._coins.push(coin);
     }
 
+    // ============ Tick ============
+
     onUpdate(dt: number): void {
+        let aliveCount = 0;
+
         for (let i = this._coins.length - 1; i >= 0; i--) {
             const coin = this._coins[i];
 
@@ -114,17 +136,23 @@ export class UdCoinFly implements IUdTickable {
                 continue;
             }
 
+            aliveCount++;
             coin.elapsed += dt;
 
             switch (coin.phase) {
-                case Phase.Burst: this._tickBurst(coin); break;
-                case Phase.Pause: this._tickPause(coin); break;
-                case Phase.Fly: this._tickFly(coin, dt); break;
+                case Phase.Burst: this._tickBurst(coin);    break;
+                case Phase.Pause: this._tickPause(coin);    break;
+                case Phase.Fly:   this._tickFly(coin, dt);  break;
             }
+        }
+
+        // 本批次金币全部结束 → 一次性结算分数
+        if (aliveCount === 0 && this._pendingScore > 0) {
+            this._commitScore();
         }
     }
 
-    // ============ Burst — 翻牌弹出 ============
+    // ============ Burst ============
 
     private _tickBurst(coin: CoinFlyData): void {
         const t = Math.min(coin.elapsed / coin.burstDuration, 1.0);
@@ -140,13 +168,12 @@ export class UdCoinFly implements IUdTickable {
         coin.node.opacity = Math.floor(t * 255);
 
         const flipT = t * 2;
-        const scaleX = Math.cos(flipT * Math.PI) * -1 * coin.scaleRatio;
-        coin.node.scaleX = scaleX;
+        coin.node.scaleX = Math.cos(flipT * Math.PI) * -1;
 
         coin.node.skewY = (1 - t) * 15 * (Math.random() > 0.5 ? 1 : -1);
 
         if (t >= 1.0) {
-            coin.node.scaleX = 1 * coin.scaleRatio;
+            coin.node.scaleX = 1;
             coin.node.scaleY = 1 * coin.scaleRatio;
             coin.node.skewY = 0;
             coin.node.opacity = 255;
@@ -210,21 +237,34 @@ export class UdCoinFly implements IUdTickable {
         );
     }
 
+    // ============ 到达 ============
+
     private _onArrive(coin: CoinFlyData): void {
-        if (coin.targetLabel && cc.isValid(coin.targetLabel.node)) {
-            coin.targetLabel.value += coin.scorePerCoin;
-        }
-        if (coin.targetNode && cc.isValid(coin.targetNode)) {
-            cc.Tween.stopAllByTarget(coin.targetNode);
-            coin.targetNode.scale = 1;
-            cc.tween(coin.targetNode)
-                .to(0.06, { scale: 1.5 }, { easing: cc.easing.backOut })
+        // 累加但更新分数
+        this._pendingScore += coin.scorePerCoin;
+
+        // 弹跳反馈
+        if (this._targetNode && cc.isValid(this._targetNode)) {
+            cc.Tween.stopAllByTarget(this._targetNode);
+            this._targetNode.scale = 1;
+            cc.tween(this._targetNode)
+                .to(0.06, { scale: 1.15 }, { easing: cc.easing.backOut })
                 .to(0.1, { scale: 1 })
                 .start();
         }
+
         coin.node.destroy();
         coin.node = null;
     }
+
+    private _commitScore(): void {
+        if (this._targetLabel && cc.isValid(this._targetLabel.node) && this._pendingScore > 0) {
+            this._targetLabel.value += this._pendingScore;
+        }
+        this._pendingScore = 0;
+    }
+
+    // ============ 工具 ============
 
     private _removeCoin(i: number): void {
         const last = this._coins.length - 1;

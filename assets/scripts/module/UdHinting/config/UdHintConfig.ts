@@ -55,7 +55,7 @@ export const UD_GAME_INTRO_GROUP: IUdHintGroup = {
 			appearWhen: [
 				{ type: "onEvent", event: "gameScore" },
 				{ type: "gamePhase", phase: "running" },
-				{ type: "minScore", min: 1 },
+				// { type: "minScore", min: 1 },
 				// { type: "cooldownSec", sec: 20 },
 				{ type: "stepNotDone" },
 			],
