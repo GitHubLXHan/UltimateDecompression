@@ -83,6 +83,14 @@ export interface IUdHintOffset {
 	y: number;
 }
 
+/** 高亮区域：用可视窗口坐标矩形定义（0,0 为屏幕中心，后续可替换为自定义特效） */
+export interface IUdHintHighlightRect {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+}
+
 /** 指引点击目标：业务 View 类名 + 节点名（与 getElm 一致） */
 export interface IUdHintTarget {
 	view: string;
@@ -103,6 +111,14 @@ export interface IUdHintStep {
 	id: string;
 	/** 步骤级触发条件（AND），须与组级 appearWhen 同时满足 */
 	appearWhen: IUdHintAppearCondition[];
+	/** 高亮区域：target 节点包围盒 或 自定义矩形，不传则无高亮 */
+	highlight?: IUdHintTarget | IUdHintHighlightRect;
+	/** 高亮区域相对锚点的偏移量（类似 fingerOffset） */
+	highlightOffset?: IUdHintOffset;
+	/** 高亮区域尺寸缩放系数，默认 1.0（仅 highlight 为 IUdHintTarget 时生效，对包围盒宽高缩放） */
+	highlightScale?: number;
+	/** 高亮镂空圆半径（像素），不传则由区域尺寸自动计算。控制遮罩镂空大小 */
+	highlightRadius?: number;
 	/** 提示文案（tip_lb） */
 	tip?: string;
 	/** 手指/光圈锚点目标（clickTarget 必填） */

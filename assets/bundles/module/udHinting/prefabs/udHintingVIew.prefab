@@ -937,7 +937,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "fruit_daxigua_shuimo",
+    "_name": "watermelon_human",
     "_objFlags": 0,
     "_parent": {
       "__id__": 23
@@ -978,7 +978,7 @@
       "ctor": "Float64Array",
       "array": [
         159.5,
-        10.311,
+        -44.832,
         0,
         0,
         0,

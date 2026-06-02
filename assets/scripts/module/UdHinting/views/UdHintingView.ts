@@ -10,7 +10,7 @@ import { UdLabel } from "../../../extension/game/UdLabel";
 import { UdSpine } from "../../../extension/game/UdSpine";
 import { UdSprite } from "../../../extension/game/UdSprite";
 import { UdTimerHub } from "../../../extension/time/UdTimerHub";
-import { IUdHintOffset, IUdHintStep, UdHintTipPlacement } from "../types/UdHintTypes";
+import { IUdHintHighlightRect, IUdHintOffset, IUdHintStep, IUdHintTarget, UdHintTipPlacement } from "../types/UdHintTypes";
 
 @UdBindMeta
 export class UdHintingView extends UdFullView {
@@ -27,12 +27,26 @@ export class UdHintingView extends UdFullView {
 	private tip_bg: UdSprite = undefined;
 	private shell_node: cc.Node = undefined;
 	private bg_shell_node: cc.Node = undefined;
+	/**西瓜人 */
+	private watermelon_human: cc.Node = undefined;
 	/** 「点击继续」文案 */
 	private next_lb: UdLabel = undefined;
+	/** 高亮光圈克隆节点列表 */
+	private _highlightClones: cc.Node[] = [];
+	/** 遮罩镂空 Graphics 组件（复用 bg_shell 或 shell） */
+	private _maskGfx: cc.Graphics | null = null;
+	/** 专用于遮罩的独立节点（挂在 root 下，不受 shell 影响） */
+	private _maskNode: cc.Node | null = null;
 
 	private _fingerTween: cc.Tween<cc.Node> = undefined;
 	private _layoutTimer: number = 0;
 	private _tapContinueCb: (() => void) | undefined;
+
+	/** 打字机效果相关 */
+	private _typewriterTimer: number = 0;
+	private _typewriterText: string = "";
+	private _typewriterIndex: number = 0;
+	private _isTypewriting: boolean = false;
 
 	public constructor() {
 		super();
@@ -52,6 +66,7 @@ export class UdHintingView extends UdFullView {
 		this.shell_node = R.getNode("shell");
 		this.bg_shell_node = R.getNode("bg_shell");
 		this.next_lb = R.getComponent("next_lb", UdLabel);
+		this.watermelon_human = R.getNode("watermelon_human");
 
 		this._hideOptionalNodes(R);
 		this.applyStep(null, false);
@@ -109,6 +124,10 @@ export class UdHintingView extends UdFullView {
 	}
 
 	private _onTapContinueTouch(): void {
+		if (this._isTypewriting) {
+			this._finishTypewriter();
+			return;
+		}
 		if (this._tapContinueCb != null) {
 			this._tapContinueCb();
 		}
@@ -124,16 +143,28 @@ export class UdHintingView extends UdFullView {
 			this.isBlockInputEvents = false;
 			this._setForceDim(false);
 			this._setGuideVisible(false);
+			this._clearHighlight();
+			this._stopTypewriter();
 			if (this.next_lb != null) {
 				this.next_lb.node.active = false;
 			}
 			return;
 		}
 
+		/** 高亮管理 */
+		this._clearHighlight();
+		const hlRegion = this._resolveHighlightRegion(step);
+		if (hlRegion != null) {
+			this._createHighlight(hlRegion);
+		}
+
 		const isTapContinue = UdHintingView.isTapContinueStep(step);
 		this.isBlockInputEvents = isTapContinue;
 
-		this._setForceDim(forceGuide);
+		/** 有高亮区域时跳过 shell 遮罩，由 _applyMaskCutout 统一处理 */
+		this._setForceDim(forceGuide && hlRegion == null);
+		const hlRadius = (step.highlightRadius != null && !isNaN(step.highlightRadius)) ? step.highlightRadius : -1;
+		this._applyMaskCutout(hlRegion, forceGuide, hlRadius);
 		this._setGuideVisible(true);
 
 		const showHalo = isTapContinue ? false : step.showHalo !== false;
@@ -156,7 +187,7 @@ export class UdHintingView extends UdFullView {
 			this.tips_node.active = showTip;
 		}
 		if (this.tip_lb != null && showTip) {
-			this.tip_lb.string = step.tip;
+			this._startTypewriter(step.tip ?? "");
 		}
 		if (this.next_lb != null) {
 			this.next_lb.node.active = isTapContinue;
@@ -304,11 +335,262 @@ export class UdHintingView extends UdFullView {
 			this._layoutTimer = 0;
 		}
 	}
+	/** 停止打字机效果 */
+	private _stopTypewriter(): void {
+		if (this._typewriterTimer > 0) {
+			UdTimerHub.Ins.remove(this._typewriterTimer);
+			this._typewriterTimer = 0;
+		}
+		this._isTypewriting = false;
+		this._typewriterText = "";
+		this._typewriterIndex = 0;
+	}
+
+	/** 西瓜人从下往上跳跃出现动画（300ms） */
+	private _playWatermelonEnter(): void {
+		if (this.watermelon_human == null) return;
+		const node = this.watermelon_human;
+		node.active = true;
+		const targetY = node.y;
+		const startY = targetY - 120;
+		node.opacity = 0;
+		node.y = startY;
+		cc.tween(node)
+			.to(0.15, { opacity: 255, y: targetY + 20 })
+			.to(0.08, { y: targetY - 8 })
+			.to(0.07, { y: targetY })
+			.start();
+	}
+
+	/** 打字机逐字显示 */
+	private _typewriterTick(): void {
+		if (!this._isTypewriting) return;
+		this._typewriterIndex++;
+		if (this._typewriterIndex <= this._typewriterText.length) {
+			if (this.tip_lb != null) {
+				this.tip_lb.string = this._typewriterText.slice(0, this._typewriterIndex);
+			}
+		}
+		if (this._typewriterIndex < this._typewriterText.length) {
+			this._typewriterTimer = UdTimerHub.Ins.callLater(0.06, () => this._typewriterTick());
+		} else {
+			this._typewriterTimer = 0;
+			this._isTypewriting = false;
+		}
+	}
+
+	/** 立即完成打字机效果 */
+	private _finishTypewriter(): void {
+		if (!this._isTypewriting) return;
+		const fullText = this._typewriterText;
+		this._stopTypewriter();
+		if (this.tip_lb != null && fullText.length > 0) {
+			this.tip_lb.string = fullText;
+		}
+	}
+
+
+	/** 启动打字机效果 + 西瓜人动画 */
+	private _startTypewriter(text: string): void {
+		this._stopTypewriter();
+		if (text == null || text.length === 0) return;
+		this._typewriterText = text;
+		this._typewriterIndex = 0;
+		this._isTypewriting = true;
+		if (this.tip_lb != null) {
+			this.tip_lb.string = "";
+		}
+		this._playWatermelonEnter();
+		this._typewriterTimer = UdTimerHub.Ins.callLater(0.06, () => this._typewriterTick());
+	}
+
+	// ==================== 高亮区域 ====================
+
+	/** 从 step.highlight 解析世界坐标高亮矩形；无配置返回 null */
+	private _resolveHighlightRegion(step: IUdHintStep): { x: number; y: number; width: number; height: number } | null {
+		const hl = step.highlight;
+		if (hl == null) return null;
+
+		let rect: { x: number; y: number; width: number; height: number } | null = null;
+
+		if ((hl as IUdHintTarget).view != null) {
+			// IUdHintTarget: 取目标节点的世界包围盒，应用 highlightScale 缩放
+			const target = hl as IUdHintTarget;
+			const view = UdPanelHub.Ins.getView(target.view);
+			if (view == null || !view.isInit) return null;
+			const node = view.getElm(target.node);
+			if (node == null || !node.activeInHierarchy) return null;
+			const box = node.getBoundingBoxToWorld();
+			const scale = step.highlightScale ?? 1;
+			const cx = box.x + box.width * 0.5;
+			const cy = box.y + box.height * 0.5;
+			const hw = box.width * 0.5 * scale;
+			const hh = box.height * 0.5 * scale;
+			rect = { x: cx - hw, y: cy - hh, width: hw * 2, height: hh * 2 };
+		} else {
+			// IUdHintHighlightRect: 可视窗口坐标 → 世界坐标（以屏幕中心为原点）
+			const r = hl as IUdHintHighlightRect;
+			const winSize = cc.view.getVisibleSize();
+			const worldX = r.x + winSize.width * 0.5;
+			const worldY = r.y + winSize.height * 0.5;
+			rect = { x: worldX, y: worldY, width: r.width, height: r.height };
+		}
+
+		if (rect == null) return null;
+
+		// 应用 offset
+		const off = step.highlightOffset;
+		if (off != null) {
+			rect.x += off.x;
+			rect.y += off.y;
+		}
+		return rect;
+	}
+
+	/** 在高亮区域创建/定位光圈克隆 */
+	private _createHighlight(region: { x: number; y: number; width: number; height: number }): void {
+		if (this.root == null || this.halo_eff == null || this.halo_eff.node == null) return;
+
+		const cx = region.x + region.width * 0.5;
+		const cy = region.y + region.height * 0.5;
+		const worldPos = cc.v2(cx, cy);
+		const localPos = this.root.convertToNodeSpaceAR(worldPos);
+
+		const clone = cc.instantiate(this.halo_eff.node);
+		clone.parent = this.root;
+		clone.setPosition(localPos);
+		clone.active = true;
+
+		// 根据区域尺寸缩放光环（取原始光圈尺寸作基准）
+		const baseW = this.halo_eff.node.width || 200;
+		const baseH = this.halo_eff.node.height || 200;
+		const scaleX = baseW > 0 ? region.width / baseW : 1;
+		const scaleY = baseH > 0 ? region.height / baseH : 1;
+		clone.scaleX = scaleX;
+		clone.scaleY = scaleY;
+
+		const spine = clone.getComponent(UdSpine);
+		if (spine != null) {
+			spine.play(UdHintingView.HALO_ANIM, true);
+		}
+
+		this._highlightClones.push(clone);
+	}
+
+	/** 清除所有高亮克隆节点 */
+	private _clearHighlight(): void {
+		for (let i = 0; i < this._highlightClones.length; i++) {
+			const node = this._highlightClones[i];
+			if (node != null && node.isValid) {
+				node.destroy();
+			}
+		}
+		this._highlightClones.length = 0;
+		this._clearMaskCutout();
+	}
+
+	// ==================== 遮罩镂空 ====================
+
+	/** 扫描线逼近圆形镂空：每行画左右两条，圆形区域自然留空 */
+	private _applyMaskCutout(
+		region: { x: number; y: number; width: number; height: number } | null,
+		forceGuide: boolean,
+		customRadius: number = -1
+	): void {
+		this._clearMaskCutout();
+		if (this.root == null) return;
+		if (!forceGuide || region == null) return;
+
+		try {
+			const r0 = this.root.convertToNodeSpaceAR(cc.v2(region.x, region.y));
+			const r1 = this.root.convertToNodeSpaceAR(cc.v2(region.x + region.width, region.y + region.height));
+			const cx = (r0.x + r1.x) * 0.5;
+			const cy = (r0.y + r1.y) * 0.5;
+			const rw = Math.abs(r1.x - r0.x);
+			const rh = Math.abs(r1.y - r0.y);
+			const radius = customRadius > 0 ? customRadius : Math.sqrt(rw * rw + rh * rh) * 0.5;
+
+			const vs = cc.view.getVisibleSize();
+			const s0 = this.root.convertToNodeSpaceAR(cc.v2(0, 0));
+			const s1 = this.root.convertToNodeSpaceAR(cc.v2(vs.width, vs.height));
+			const sx = Math.min(s0.x, s1.x);
+			const sy = Math.min(s0.y, s1.y);
+			const sw = Math.abs(s1.x - s0.x);
+			const sh = Math.abs(s1.y - s0.y);
+
+			const DIM = UdHintingView.FORCE_DIM_OPACITY;
+			const dimColor = cc.color(0, 0, 0, DIM);
+
+			const wrap = new cc.Node("__hint_mask_wrap__");
+			wrap.parent = this.root;
+			wrap.setPosition(0, 0);
+			wrap.zIndex = -999;
+			wrap.active = true;
+
+			// 扫描线步长（越小越圆，越大性能越好）
+			const STEP = 4;
+			const r2 = radius * radius;
+
+			for (let y = sy; y < sy + sh; y += STEP) {
+				const dy = y - cy;
+				// 该扫描线在圆内部的部分
+				if (Math.abs(dy) <= radius) {
+					const dx = Math.sqrt(r2 - dy * dy);
+					const innerLeft = cx - dx;
+					const innerRight = cx + dx;
+
+					// 左遮罩
+					if (innerLeft > sx) {
+						this._addMaskRect(wrap, dimColor, sx, y, innerLeft - sx, STEP);
+					}
+					// 右遮罩
+					if (innerRight < sx + sw) {
+						this._addMaskRect(wrap, dimColor, innerRight, y, sx + sw - innerRight, STEP);
+					}
+				} else {
+					// 扫描线完全在圆外，整行填充
+					this._addMaskRect(wrap, dimColor, sx, y, sw, STEP);
+				}
+			}
+
+			this._maskNode = wrap;
+		} catch (e) {
+			// fallback
+		}
+	}
+
+	/** 在指定父节点创建一块填充矩形遮罩 */
+	private _addMaskRect(parent: cc.Node, color: cc.Color, x: number, y: number, w: number, h: number): void {
+		if (w <= 0 || h <= 0) return;
+		const node = new cc.Node();
+		node.parent = parent;
+		node.setPosition(0, 0);
+		node.zIndex = -999;
+		node.active = true;
+		const gfx = node.addComponent(cc.Graphics);
+		gfx.fillColor = color;
+		gfx.rect(x, y, w, h);
+		gfx.fill();
+	}
+
+	/** 清除遮罩镂空 Graphics 和独立节点 */
+	private _clearMaskCutout(): void {
+		if (this._maskGfx != null) {
+			this._maskGfx.clear();
+			this._maskGfx = null;
+		}
+		if (this._maskNode != null && this._maskNode.isValid) {
+			this._maskNode.destroy();
+			this._maskNode = null;
+		}
+	}
 
 	public onClose() {
 		this.unbindTapContinue();
 		this._stopLayoutTimer();
 		this._stopFingerTween();
+		this._stopTypewriter();
+		this._clearHighlight();
 		super.onClose();
 	}
 }

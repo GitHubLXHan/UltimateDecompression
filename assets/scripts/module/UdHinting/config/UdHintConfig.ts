@@ -26,11 +26,16 @@ export const UD_GAME_INTRO_GROUP: IUdHintGroup = {
 			target: { view: "UdGameMain", node: "start_btn" },
 			tipPlacement: "top",
 			fingerOffset: { x: 0, y: -50 },
-			tipsNodeOffset: { x: 0, y: -60 },
+			tipsNodeOffset: { x: 100, y: 0 },
 			complete: "clickTarget",
+			highlight: { view: "UdGameMain", node: "start_btn" },
+			highlightScale: 3,
+			highlightRadius: 100,   // 镂空圆半径 180px
+			showHalo: false,
 		},
 		{
 			id: "intro_tip_button_touch",
+			forceGuide: false,
 			appearWhen: [
 				{ type: "onEvent", event: "gameRunning" },
 				{ type: "gamePhase", phase: "running" },
@@ -38,13 +43,15 @@ export const UD_GAME_INTRO_GROUP: IUdHintGroup = {
 				{ type: "stepNotDone" },
 			],
 			tip: "点击任意区域掉落水果",
-			complete: "tapContinue",
+			target: { view: "UdGameMain", node: "game_root" },
+			complete: "clickTarget",
 			nextLabel: "",
-			showHalo: false,
-			showFinger: false,
+			fingerOffset: { x: 0, y: 0 },
+			tipsNodeOffset: { x: 0, y: 0 },
 		},
 		{
 			id: "intro_tip",
+			forceGuide: true,
 			appearWhen: [
 				{ type: "onEvent", event: "gameScore" },
 				{ type: "gamePhase", phase: "running" },
@@ -56,6 +63,11 @@ export const UD_GAME_INTRO_GROUP: IUdHintGroup = {
 			complete: "tapContinue",
 			showHalo: false,
 			showFinger: false,
+			nextLabel: "",
+			highlight: { view: "UdGameMain", node: "score_node" },
+			highlightScale: 3,
+			highlightRadius: 120,   // 镂空圆半径 180px
+			// highlight: { x: 0, y: 0, width: 200, height: 100 }
 		},
 		// {
 		// 	id: "tap_setting",

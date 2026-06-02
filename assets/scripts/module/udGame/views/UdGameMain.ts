@@ -327,7 +327,9 @@ export class UdGameMain extends UdFullView {
         this.score_node_h.active = false;
         this.score_node.active = true;
         this.skip_btn.node.active = true;
-        UdHintingHub.Ins.onTrigger("gameRunning", { gamePhase: "running" });
+        UdTimerHub.Ins.callFew(() => {
+            UdHintingHub.Ins.onTrigger("gameRunning", { gamePhase: "running" });
+        });
         this.__bootstrapRound();
     }
 
