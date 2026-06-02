@@ -11,7 +11,7 @@ export const UD_GAME_INTRO_GROUP: IUdHintGroup = {
 	appearWhen: [
 		{ type: "notDone" },
 		{ type: "showCountBelow", max: 3 },
-		{ type: "cooldownSec", sec: 0 },
+		{ type: "cooldownSec", sec: 10 },
 	],
 	steps: [
 		{

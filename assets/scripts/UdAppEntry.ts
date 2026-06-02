@@ -107,8 +107,10 @@ export class UdAppEntry extends cc.Component {
 		let openGame = () => {
 			this.initDebug();
 			UdPanelHub.Ins.open(UdGameMain, UdLayerKind.Panel);
-			UdPanelHub.Ins.open(UdHintingView, UdLayerKind.Hint);
-			UdHintingHub.Ins.onTrigger("appStart");
+			UdTimerHub.Ins.callLater(5000, () => {
+				UdPanelHub.Ins.open(UdHintingView, UdLayerKind.Hint);
+				UdHintingHub.Ins.onTrigger("appStart");
+			});
 		}
 
 		let loadMain = (<any>window).loadMain;

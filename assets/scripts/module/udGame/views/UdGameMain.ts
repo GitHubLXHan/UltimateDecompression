@@ -18,6 +18,8 @@ import { UdSettingView } from "../../udSetting/UdSettingView";
 import { UdHapticHub } from "../../../extension/haptic/UdHapticHub";
 import { UdHintingHub } from "../../UdHinting/UdHintingHub";
 import { UdComboPraiseHub } from "../combo/UdComboPraiseHub";
+import { UdCoinFly } from "../coin/UdCoinFly";
+import { UdMathLabel } from "../../../extension/game/UdMathLabel";
 
 /** Game play state enum */
 const enum PlayPhase {
@@ -146,7 +148,7 @@ export class UdGameMain extends UdFullView {
         this.eff_node = R.getNode("eff_node");
         this.fruit_prefab = R.getNode("fruit_prefab");
         this.score_node = R.getNode("score_node");
-        this.score_lb = R.getComponent("score_lb", UdLabel);
+        this.score_lb = R.getComponent("score_lb", UdMathLabel);
         this.score_node_h = R.getNode("score_node_h");
         this.score_lb_h = R.getComponent("score_lb_h", UdLabel);
         this.preview_info_node = R.getNode("preview_info_node");
@@ -505,7 +507,27 @@ export class UdGameMain extends UdFullView {
 
                 // Score from config weight table
                 const scoreTable = this.__rawConfig[0] as number[][];
-                this.__score += (scoreTable[upgradeId] && scoreTable[upgradeId][2]) || 0;
+                const earnedScore = (scoreTable[upgradeId] && scoreTable[upgradeId][2]) || 0;
+
+                // ---- coin burst ----
+                if (earnedScore > 0) {
+                    const worldPos = this.eff_node.convertToWorldSpaceAR(cc.v2(mx, my));
+                    const coinCount = Math.min(earnedScore, 16);
+                    const scorePerCoin = Math.ceil(earnedScore / coinCount);
+                    for (let i = 0; i < coinCount; i++) {
+                        UdCoinFly.spawn(
+                            this.eff_node,
+                            worldPos,
+                            this.score_lb.node,
+                            scorePerCoin,
+                            i,
+                            coinCount,
+                        );
+                    }
+                }
+
+                // Base score (kept for save/display consistency)
+                this.__score += earnedScore;
                 this.__applyScoreBadge();
             });
         }
