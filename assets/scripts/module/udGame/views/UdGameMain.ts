@@ -73,6 +73,7 @@ export class UdGameMain extends UdFullView {
     preview_info_node: cc.Node = undefined;
     score_node: cc.Node = undefined;
     score_node_h: cc.Node = undefined;
+    bg_img: cc.Node = undefined;
 
     // ---- serialized labels & buttons ----
     desc_lb: UdLabel = undefined;
@@ -165,6 +166,7 @@ export class UdGameMain extends UdFullView {
         this.ground_1 = R.getNode("ground_1");
         this.ground_2_collider = R.getComponent("ground_2", cc.PhysicsBoxCollider);
         this.ground_3_collider = R.getComponent("ground_3", cc.PhysicsBoxCollider);
+        this.bg_img = R.getNode("bg_img");
     }
 
     protected addEvents(): void {
