@@ -2,6 +2,7 @@ import { IUdTickable } from "../../../extension/update/IUdTickable";
 import { UdTickHub } from "../../../extension/update/UdTickHub";
 import { UdRandomKit } from "../../../extension/utils/UdRandomKit";
 import { UdMathLabel } from "../../../extension/game/UdMathLabel";
+import { UdHintingHub } from "../../UdHinting/UdHintingHub";
 import { UdSprite } from "../../../extension/game/UdSprite";
 
 const COIN_IMAGE = "udGame/ui/auto/common_icon_jinbi_shuimo";
@@ -262,6 +263,12 @@ export class UdCoinFly implements IUdTickable {
             this._targetLabel.value += this._pendingScore;
         }
         this._pendingScore = 0;
+
+        // 分数更新完成后触发指引事件
+        UdHintingHub.Ins.onTrigger("gameScore", {
+            gamePhase: "running",
+            score: this._targetLabel ? this._targetLabel.value : 0,
+        });
     }
 
     // ============ 工具 ============

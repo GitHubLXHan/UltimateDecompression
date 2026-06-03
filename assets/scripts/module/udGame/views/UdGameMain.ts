@@ -76,7 +76,7 @@ export class UdGameMain extends UdFullView {
 
     // ---- serialized labels & buttons ----
     desc_lb: UdLabel = undefined;
-    score_lb: UdLabel = undefined;
+    score_lb: UdMathLabel = undefined;
     score_lb_h: UdLabel = undefined;
     button_touch: UdButton = undefined;
     start_btn: UdButton = undefined;
@@ -529,7 +529,6 @@ export class UdGameMain extends UdFullView {
 
                 // Score tracked for save / game-over, display updated by coin batch
                 this.__score += earnedScore;
-                this.__tryHintOnScore();
 
             });
         }
@@ -640,7 +639,6 @@ export class UdGameMain extends UdFullView {
 
     private __applyScoreBadge(): void {
         this.score_lb.string = `${this.__score}`;
-        this.__tryHintOnScore();
     }
 
     /** 本局积分变化时尝试触发依赖 minScore 的指引 */

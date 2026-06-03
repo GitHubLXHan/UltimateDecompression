@@ -6,6 +6,7 @@ import { UdBindMeta } from "../../../extension/basecore/UdDecoratorKit";
 import { UdBtnSignal } from "../../../extension/components/GameBtn/UdBtnSignal";
 import { UdButton } from "../../../extension/game/UdButton";
 import { UdTimerHub } from "../../../extension/time/UdTimerHub";
+import { UdMathLabel } from "../../../extension/game/UdMathLabel";
 
 export interface IUdGameScore {
     num?: number;
@@ -16,7 +17,7 @@ export interface IUdGameScore {
 export class UdGameResult extends UdFullView {
     private __bgRoot: cc.Node;
     private __contentRoot: cc.Node;
-    private __scoreLabel: cc.Label;
+    private __scoreLabel: UdMathLabel;
     private __maskNode: cc.Node;
 
     private __tweenPool: UdSeqList<cc.Tween<cc.Node>> = new UdSeqList<cc.Tween<cc.Node>>();
@@ -36,7 +37,7 @@ export class UdGameResult extends UdFullView {
         super.init(root);
         this.__bgRoot = this.UdResFinder.getNode("bg_node");
         this.__contentRoot = this.UdResFinder.getNode("content");
-        this.__scoreLabel = this.UdResFinder.getComponent("content_lb", cc.Label);
+        this.__scoreLabel = this.UdResFinder.getComponent("content_lb", UdMathLabel);
         this.__maskNode = this.UdResFinder.getNode("mask_node");
     }
 
