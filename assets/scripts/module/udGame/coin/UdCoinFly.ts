@@ -259,16 +259,21 @@ export class UdCoinFly implements IUdTickable {
     }
 
     private _commitScore(): void {
-        if (this._targetLabel && cc.isValid(this._targetLabel.node) && this._pendingScore > 0) {
-            this._targetLabel.value += this._pendingScore;
+        const score = this._pendingScore;
+        if (this._targetLabel && cc.isValid(this._targetLabel.node) && score > 0) {
+            this._targetLabel.value += score;
         }
         this._pendingScore = 0;
 
-        // 分数更新完成后触发指引事件
-        UdHintingHub.Ins.onTrigger("gameScore", {
-            gamePhase: "running",
-            score: this._targetLabel ? this._targetLabel.value : 0,
-        });
+        // 分数更新完成后触发指引事件（取更新后的值）
+        if (score > 0) {
+            const currentScore = this._targetLabel ? this._targetLabel.value : 0;
+            console.log("[UdCoinFly] gameScore trigger — currentScore=", currentScore, "score added=", score);
+            UdHintingHub.Ins.onTrigger("gameScore", {
+                gamePhase: "running",
+                score: currentScore,
+            });
+        }
     }
 
     // ============ 工具 ============

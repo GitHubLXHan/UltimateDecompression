@@ -39,6 +39,10 @@ export class UdGameResult extends UdFullView {
         this.__contentRoot = this.UdResFinder.getNode("content");
         this.__scoreLabel = this.UdResFinder.getComponent("content_lb", UdMathLabel);
         this.__maskNode = this.UdResFinder.getNode("mask_node");
+
+        this.__scoreLabel.prefix = "恭喜达到";
+        this.__scoreLabel.suffix = "分";
+        this.__scoreLabel.value = 0;
     }
 
     protected addEvents(): void {
@@ -61,7 +65,9 @@ export class UdGameResult extends UdFullView {
         UdAudioHub.Ins.playSound(UdAudioDef.CombatWinSfx);
 
         // Score display
-        this.__scoreLabel.string = `恭喜达到${data.num}分`;
+        UdTimerHub.Ins.callLater(0.6, () => {
+            this.__scoreLabel.value = data.num;
+        });
 
         // Deferred layout update
         this.__deferredId = UdTimerHub.Ins.callFew(() => {

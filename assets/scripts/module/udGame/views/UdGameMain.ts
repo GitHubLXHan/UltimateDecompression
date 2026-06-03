@@ -681,12 +681,13 @@ export class UdGameMain extends UdFullView {
 
         this.__clearSave();
 
+        const displayScore = Math.round(this.score_lb.value | 0);
         const payload: IUdGameScore = {
-            num: this.__score,
+            num: displayScore,
             enterMainGame,
         };
         UdPanelHub.Ins.open(UdGameResult, UdLayerKind.Panel, payload);
-        this.__commitBestScore(this.__score);
+        this.__commitBestScore(displayScore);
     }
 
     private __onResultDismissed(target: UdPanelHub, args: [string]): void {
