@@ -38,7 +38,7 @@ export class UdSettingView extends UdPopPanel {
 		this.shake_tgl.node.off("toggle", this.__onShakeToggle, this);
 	}
 
-	public updateView(...args: any[]) {
+	public updateView() {
 		this.__syncToggleStates();
 	}
 

@@ -20,6 +20,7 @@ import { UdHintingHub } from "../../UdHinting/UdHintingHub";
 import { UdComboPraiseHub } from "../combo/UdComboPraiseHub";
 import { UdCoinFly } from "../coin/UdCoinFly";
 import { UdMathLabel } from "../../../extension/game/UdMathLabel";
+import { IUdTipViewData, UdTipView } from "../../udCommon/views/UdTipView";
 
 /** Game play state enum */
 const enum PlayPhase {
@@ -89,6 +90,7 @@ export class UdGameMain extends UdFullView {
     ground_1: cc.Node = undefined;
     ground_2_collider: cc.PhysicsBoxCollider = undefined;
     ground_3_collider: cc.PhysicsBoxCollider = undefined;
+    help_btn: UdButton = undefined;
 
     // ---- private nodes ----
     private skip_btn: UdButton;
@@ -166,6 +168,7 @@ export class UdGameMain extends UdFullView {
         this.ground_1 = R.getNode("ground_1");
         this.ground_2_collider = R.getComponent("ground_2", cc.PhysicsBoxCollider);
         this.ground_3_collider = R.getComponent("ground_3", cc.PhysicsBoxCollider);
+        this.help_btn = R.getComponent("help_btn", UdButton);
         this.bg_img = R.getNode("bg_img");
     }
 
@@ -177,6 +180,7 @@ export class UdGameMain extends UdFullView {
         this.add_time_btn.addListener(UdBtnSignal.FingerTap, this.__onTokenAdd, this);
         UdPanelHub.Ins.addListener(UdPanelSignal.PanelHide, this.__onResultDismissed, this);
         this.setting_btn.addListener(UdBtnSignal.FingerTap, this.__onSettingTap, this);
+        this.help_btn.addListener(UdBtnSignal.FingerTap, this.__onHelpTap, this);
         if (this.record_btn != null) {
             this.record_btn.addListener(UdBtnSignal.FingerTap, this.__onRecordTap, this);
         }
@@ -704,6 +708,36 @@ export class UdGameMain extends UdFullView {
         UdPanelHub.Ins.open(UdSettingView, UdLayerKind.Panel);
     }
 
+    private __onHelpTap(): void {
+        let ctnArr: string[] = [];
+        ctnArr.push("一、操作规则");
+        ctnArr.push("        玩家选择并点击屏幕位置，上方的水果会以经过此位置的竖线为路径开始向下掉落；");
+        ctnArr.push("二、合成规则");
+        ctnArr.push("        相同的水果在触碰到的瞬间会合成更大一级的水果，最高级的大西瓜不会再向上合成；");
+        ctnArr.push("三、合成积分");
+        ctnArr.push("        每次合成水果都可获得积分，合成越大的水果获得的积分越多，合成各级水果获得的积分数据如下：");
+        ctnArr.push("        0级蓝莓（0积分）");
+        ctnArr.push("        1级山竹（1积分）");
+        ctnArr.push("        2级柠檬（2积分）");
+        ctnArr.push("        3级哈密瓜（4积分）");
+        ctnArr.push("        4级猕猴桃（8积分）");
+        ctnArr.push("        5级黄桃（16积分）");
+        ctnArr.push("        6级椰子（32积分）");
+        ctnArr.push("        7级西瓜半（64积分）");
+        ctnArr.push("        8级大西瓜（128积分）");
+        ctnArr.push("四、游戏奖励：");
+        ctnArr.push("        1.玩家单局游戏消耗一次游戏机会；");
+        ctnArr.push("        2.玩家单局达到800积分时，免扣本局游戏机会且和额外获得一次游戏机会；");
+
+        let viewParams: IUdTipViewData = {
+            title: "游戏规则",
+            content: ctnArr.join("\n"),
+
+        }
+
+        UdPanelHub.Ins.open(UdTipView, UdLayerKind.Panel, viewParams);
+    }
+
     // ==================== SAVE / LOAD ====================
 
     private __canSaveNow(): boolean {
@@ -883,7 +917,7 @@ export class UdGameMain extends UdFullView {
         this.ground_3_collider.node.height = height;
         this.ground_3_collider.size = cc.size(200, height);
     }
-    
+
 
 
 }

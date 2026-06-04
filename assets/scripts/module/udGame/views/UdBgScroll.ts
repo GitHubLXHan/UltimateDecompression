@@ -37,6 +37,7 @@ export class UdBgScroll extends cc.Component {
 
     // ============ 显示区域裁剪 ============
     @property({ type: cc.Vec4, tooltip: "纹理显示范围（左、右、上、下边距，像素）" })
+    //@ts-ignore
     showTextureRange: cc.Vec4 = cc.v4(0, 0, 0, 0);
 
     // ============ 内部 ============
@@ -130,6 +131,7 @@ export class UdBgScroll extends cc.Component {
     private _applyShowTextureRange(): void {
         if (!this._sprite) return;
         const r = this.showTextureRange;
+        //@ts-ignore
         this._setProp("showTextureRange", cc.v4(
             r.x / this._sprite.node.width,
             1 - r.y / this._sprite.node.width,

@@ -119,13 +119,17 @@ export class UdHintingHub {
 	 * 业务事件入口：组级 + 步骤级 appearWhen 均满足时展示该步骤（每次触发最多展示一个步骤）。
 	 */
 	public onTrigger(type: UdHintTriggerType, ctx?: IUdHintTriggerContext): void {
+		console.log("[UdHinting] onTrigger type=", type, "isGuiding=", this.isGuiding());
 		if (this.isGuiding()) {
+			console.log("[UdHinting] blocked - already guiding");
 			return;
 		}
 		const groups = Array.from(this._groups.values());
 		for (let g = 0; g < groups.length; g++) {
 			const group = groups[g];
-			if (!this._matchConditions(group.appearWhen, type, ctx, group.id)) {
+			const groupCondMatch = this._matchConditions(group.appearWhen, type, ctx, group.id);
+			console.log("[UdHinting] group", group.id, "groupCondMatch=", groupCondMatch, "isGroupDone=", this.isGroupDone(group.id));
+			if (!groupCondMatch) {
 				continue;
 			}
 			if (group.once !== false && this.isGroupDone(group.id)) {
@@ -273,6 +277,7 @@ export class UdHintingHub {
 		}
 		for (let i = 0; i < conditions.length; i++) {
 			if (!this._matchOneCondition(conditions[i], trigger, ctx, groupId, stepId)) {
+			console.log("[UdHinting] cond", i, JSON.stringify(conditions[i]), "->","...");
 				return false;
 			}
 		}
@@ -287,10 +292,14 @@ export class UdHintingHub {
 	): number {
 		for (let i = 0; i < group.steps.length; i++) {
 			const step = group.steps[i];
-			if (this.isStepDone(group.id, step.id)) {
+			const isDone = this.isStepDone(group.id, step.id);
+			console.log("[UdHinting] step", i, step.id, "isDone=", isDone);
+			if (isDone) {
 				continue;
 			}
-			if (this._matchConditions(step.appearWhen, trigger, ctx, group.id, step.id)) {
+			const matched = this._matchConditions(step.appearWhen, trigger, ctx, group.id, step.id);
+			console.log("[UdHinting] step", i, step.id, "matched=", matched);
+			if (matched) {
 				return i;
 			}
 		}
