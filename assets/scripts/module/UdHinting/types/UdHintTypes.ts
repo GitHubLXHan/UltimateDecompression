@@ -35,6 +35,7 @@ export type UdHintConditionKind =
 	| "minPlayCount"    // 累计开局次数 ≥ min，字段：min，需 ctx.playCount
 	| "maxPlayCount"    // 累计开局次数 ≤ max，字段：max，需 ctx.playCount
 	| "minScore"        // 本局积分 ≥ min，字段：min，需 ctx.score
+	| "maxScore"        // 本局积分 ≤ max，字段：max，需 ctx.score
 	| "showCountBelow"  // 本组已展示次数 < max，字段：max（Hub 持久化）
 	| "cooldownSec"     // 距本组上次展示 ≥ sec 秒，字段：sec（Hub 持久化；0 表示不冷却）
 	| "storageFlag"     // localStorage 标记，字段：key、equals（默认 "1"）

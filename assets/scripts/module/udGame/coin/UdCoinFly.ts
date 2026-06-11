@@ -223,7 +223,7 @@ export class UdCoinFly implements IUdTickable {
         const dx = coin.p3.x - coin.p0.x;
         const dy = coin.p3.y - coin.p0.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        const arcHeight = Math.max(dist * 0.7, 100);
+        const arcHeight = Math.max(dist * 0.3, 40);
 
         const midX = (coin.p0.x + coin.p3.x) * 0.5;
         const midY = Math.max(coin.p0.y, coin.p3.y) + arcHeight;
@@ -233,8 +233,8 @@ export class UdCoinFly implements IUdTickable {
             midY,
         );
         coin.p2 = cc.v2(
-            midX + UdRandomKit.getRandomNumber(-arcHeight * 0.2, arcHeight * 0.2),
-            midY + arcHeight * 0.2,
+            midX + UdRandomKit.getRandomNumber(-arcHeight * 0.4, arcHeight * 0.4),
+            midY + arcHeight * 0.4,
         );
     }
 

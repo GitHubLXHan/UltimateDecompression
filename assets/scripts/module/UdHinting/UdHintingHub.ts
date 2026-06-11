@@ -119,9 +119,9 @@ export class UdHintingHub {
 	 * 业务事件入口：组级 + 步骤级 appearWhen 均满足时展示该步骤（每次触发最多展示一个步骤）。
 	 */
 	public onTrigger(type: UdHintTriggerType, ctx?: IUdHintTriggerContext): void {
-		console.log("[UdHinting] onTrigger type=", type, "isGuiding=", this.isGuiding());
-		if (this.isGuiding()) {
-			console.log("[UdHinting] blocked - already guiding");
+		console.log("[UdHinting] onTrigger type=", type, "isGuiding=", this.isGuiding(), "isForce=", this.isForceGuiding());
+		if (this.isForceGuiding()) {
+			console.log("[UdHinting] blocked - force guiding active");
 			return;
 		}
 		const groups = Array.from(this._groups.values());
@@ -160,7 +160,7 @@ export class UdHintingHub {
 		if (group.once !== false && this.isGroupDone(groupId)) {
 			return false;
 		}
-		if (this.isGuiding()) {
+		if (this.isForceGuiding()) {
 			return false;
 		}
 		if (!this._matchConditions(group.appearWhen, trigger, ctx, groupId)) {
@@ -186,7 +186,7 @@ export class UdHintingHub {
 		if (group.once !== false && this.isGroupDone(groupId)) {
 			return false;
 		}
-		if (this.isGuiding()) {
+		if (this.isForceGuiding()) {
 			return false;
 		}
 		if (!this._matchConditions(group.appearWhen, trigger, ctx, groupId)) {
@@ -209,7 +209,7 @@ export class UdHintingHub {
 		if (group.once !== false && this.isGroupDone(groupId)) {
 			return false;
 		}
-		if (this.isGuiding()) {
+		if (this.isForceGuiding()) {
 			return false;
 		}
 		if (!this._matchConditions(group.appearWhen, trigger, ctx, groupId)) {
@@ -334,6 +334,12 @@ export class UdHintingHub {
 				if (score == null || cond.min == null) return false;
 				return score >= cond.min;
 			}
+			
+			case "maxScore": {
+				const score = ctx?.score;
+				if (score == null || cond.max == null) return false;
+				return score <= cond.max;
+			}
 			case "maxPlayCount": {
 				const count = ctx?.playCount;
 				if (count == null || cond.max == null) return false;
@@ -396,9 +402,13 @@ export class UdHintingHub {
 
 	/** 启动并展示指定下标的步骤 */
 	private _tryStartStepAt(groupId: string, stepIndex: number, force: boolean = false): boolean {
-		if (this.isGuiding()) {
+		if (this.isForceGuiding()) {
 			return false;
 		}
+			// 如果当前有非强制引导正在展示，先清理掉（不标记完成），让新步骤抢占
+			if (this.isGuiding()) {
+				this._finishStep();
+			}
 		const group = this._groups.get(groupId);
 		if (group == null || stepIndex < 0 || stepIndex >= group.steps.length) {
 			return false;

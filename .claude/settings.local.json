@@ -4,7 +4,18 @@
       "Bash(chmod +x /Users/admin/Documents/Code/UltimateDecompression/tools/rename_all.sh)",
       "Bash(bash /Users/admin/Documents/Code/UltimateDecompression/tools/rename_all.sh)",
       "Bash(bash --version)",
-      "Bash(xargs -0 perl -pi -e ' *)"
+      "Bash(xargs -0 perl -pi -e ' *)",
+      "Bash(sed -i '' '337,341s/^\t\t\t\t\t\t/\t\t\t\t/' /Users/admin/Documents/Code/UltimateDecompression/assets/scripts/module/UdHinting/UdHintingHub.ts)",
+      "Bash(sed -i '' '341s/^\t\t\t\t\t}/\t\t\t\t}/' /Users/admin/Documents/Code/UltimateDecompression/assets/scripts/module/UdHinting/UdHintingHub.ts)",
+      "Bash(sed -i '' '342s/^\t\t\t\t\t/\t\t\t\t/' /Users/admin/Documents/Code/UltimateDecompression/assets/scripts/module/UdHinting/UdHintingHub.ts)",
+      "Bash(git checkout *)",
+      "Bash(sed -i '' '337s/^[[:space:]]*$//' /Users/admin/Documents/Code/UltimateDecompression/assets/scripts/module/UdHinting/UdHintingHub.ts)",
+      "Bash(sed -i '' '/^[[:space:]]*$/N;/^\\\\n[[:space:]]*$/d' /Users/admin/Documents/Code/UltimateDecompression/assets/scripts/module/UdHinting/UdHintingHub.ts)",
+      "Bash(sed -i '' 's/if \\(this.isGuiding\\(\\)\\)/if \\(this.isForceGuiding\\(\\)\\)/' /Users/admin/Documents/Code/UltimateDecompression/assets/scripts/module/UdHinting/UdHintingHub.ts)",
+      "Bash(sed -i '' 's/\"\\\\[UdHinting\\\\] blocked - already guiding\"/\"\\\\[UdHinting\\\\] blocked - force guiding active\"/' /Users/admin/Documents/Code/UltimateDecompression/assets/scripts/module/UdHinting/UdHintingHub.ts)",
+      "Bash(sed -i '' 's/\"isGuiding=\", this.isGuiding\\(\\)\\);/\"isGuiding=\", this.isGuiding\\(\\), \"isForce=\", this.isForceGuiding\\(\\)\\);/' /Users/admin/Documents/Code/UltimateDecompression/assets/scripts/module/UdHinting/UdHintingHub.ts)",
+      "Bash(sed -i '' 's/if \\(this\\\\.isGuiding\\(\\)\\)/if \\(this.isForceGuiding\\(\\)\\)/' /Users/admin/Documents/Code/UltimateDecompression/assets/scripts/module/UdHinting/UdHintingHub.ts)",
+      "Bash(sed -i '' 's/\"isGuiding=\", this.isGuiding\\(\\)\\)/\"isGuiding=\", this.isGuiding\\(\\), \"isForce=\", this.isForceGuiding\\(\\)\\)/' /Users/admin/Documents/Code/UltimateDecompression/assets/scripts/module/UdHinting/UdHintingHub.ts)"
     ]
   }
 }

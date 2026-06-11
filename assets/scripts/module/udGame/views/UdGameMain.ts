@@ -645,6 +645,7 @@ export class UdGameMain extends UdFullView {
 
     private __applyScoreBadge(): void {
         this.score_lb.string = `${this.__score}`;
+        this.__tryHintOnScore();
     }
 
     /** 本局积分变化时尝试触发依赖 minScore 的指引 */
