@@ -8,7 +8,7 @@ const { ccclass, property, inspector, executeInEditMode, menu } = cc._decorator;
 @ccclass
 // @inspector("packages://inspector/inspectors/comps/sprite.js")   //这行代码可以让inspector变成sprite那种样式  但是是全覆盖的 会覆盖掉自定义变量source
 @executeInEditMode
-@menu("UI/UdSprite(拓展精灵)")
+@menu("通用/UdSprite(拓展精灵)")
 export class UdSprite extends cc.Sprite {
 
 

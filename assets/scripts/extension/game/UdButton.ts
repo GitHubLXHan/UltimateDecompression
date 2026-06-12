@@ -8,7 +8,7 @@ import { UdNodeSignal } from "../eventListener/UdNodeSignal";
 const { ccclass, property, menu } = cc._decorator
 
 @ccclass
-@menu("UI/UdButton(缩放按钮)")
+@menu("通用/UdButton(缩放按钮)")
 export class UdButton extends UdNodeSignal<UdBtnSignal, UdButton> {
     @property({ type: cc.Float, tooltip: "缩放值" })
     Scale: number = 0.95;

@@ -6,7 +6,7 @@ import { udRes } from "../resources/UdResHub";
 const { ccclass, menu, executeInEditMode } = cc._decorator;
 
 @ccclass
-@menu("UI/UdGrayMask(灰度效果)")
+@menu("通用/UdGrayMask(灰度效果)")
 @executeInEditMode
 export class UdGrayMask extends cc.Component {
 

@@ -181,9 +181,7 @@ export class UdGameMain extends UdFullView {
         UdPanelHub.Ins.addListener(UdPanelSignal.PanelHide, this.__onResultDismissed, this);
         this.setting_btn.addListener(UdBtnSignal.FingerTap, this.__onSettingTap, this);
         this.help_btn.addListener(UdBtnSignal.FingerTap, this.__onHelpTap, this);
-        if (this.record_btn != null) {
-            this.record_btn.addListener(UdBtnSignal.FingerTap, this.__onRecordTap, this);
-        }
+        this.record_btn.addListener(UdBtnSignal.FingerTap, this.__onRecordTap, this);
     }
 
     protected removeEvents(): void {
@@ -194,9 +192,7 @@ export class UdGameMain extends UdFullView {
         this.add_time_btn.removeListener(UdBtnSignal.FingerTap, this.__onTokenAdd, this);
         UdPanelHub.Ins.removeListener(UdPanelSignal.PanelHide, this.__onResultDismissed, this);
         this.setting_btn.removeListener(UdBtnSignal.FingerTap, this.__onSettingTap, this);
-        if (this.record_btn != null) {
-            this.record_btn.removeListener(UdBtnSignal.FingerTap, this.__onRecordTap, this);
-        }
+        this.record_btn.removeListener(UdBtnSignal.FingerTap, this.__onRecordTap, this);
     }
 
     public updateView(arg?: any): void {
@@ -674,7 +670,23 @@ export class UdGameMain extends UdFullView {
     // ==================== GAME OVER ====================
 
     private __onSkipTap(): void {
-        this.__notifyGameOver(false);
+        let viewParams: IUdTipViewData = {
+            title: "提示",
+            content: "确定跳过当局游戏吗？",
+            alignVertical: cc.Label.VerticalAlign.CENTER,
+            alignHorizontal: cc.Label.HorizontalAlign.CENTER,
+            leftBtnStyle: {
+                text: "取消",
+                clickCallBack: null
+            },
+            rightBtnStyle: {
+                text: "确定",
+                clickCallBack: () => {
+                    this.__notifyGameOver(false);
+                }
+            }
+        }
+        UdPanelHub.Ins.open(UdTipView, UdLayerKind.Panel, viewParams);
     }
 
     private __onTokenAdd(): void {
@@ -733,7 +745,6 @@ export class UdGameMain extends UdFullView {
         let viewParams: IUdTipViewData = {
             title: "游戏规则",
             content: ctnArr.join("\n"),
-
         }
 
         UdPanelHub.Ins.open(UdTipView, UdLayerKind.Panel, viewParams);
