@@ -73,13 +73,11 @@ export class UdGameMain extends UdFullView {
     line_node: cc.Node = undefined;
     preview_info_node: cc.Node = undefined;
     score_node: cc.Node = undefined;
-    score_node_h: cc.Node = undefined;
     bg_img: cc.Node = undefined;
 
     // ---- serialized labels & buttons ----
     desc_lb: UdLabel = undefined;
     score_lb: UdMathLabel = undefined;
-    score_lb_h: UdLabel = undefined;
     button_touch: UdButton = undefined;
     start_btn: UdButton = undefined;
     remaining_time_lb: UdLabel = undefined;
@@ -91,6 +89,7 @@ export class UdGameMain extends UdFullView {
     ground_2_collider: cc.PhysicsBoxCollider = undefined;
     ground_3_collider: cc.PhysicsBoxCollider = undefined;
     help_btn: UdButton = undefined;
+    stage_lb: UdLabel = undefined;
 
     // ---- private nodes ----
     private skip_btn: UdButton;
@@ -152,8 +151,6 @@ export class UdGameMain extends UdFullView {
         this.fruit_prefab = R.getNode("fruit_prefab");
         this.score_node = R.getNode("score_node");
         this.score_lb = R.getComponent("score_lb", UdMathLabel);
-        this.score_node_h = R.getNode("score_node_h");
-        this.score_lb_h = R.getComponent("score_lb_h", UdLabel);
         this.preview_info_node = R.getNode("preview_info_node");
         this.start_btn = R.getComponent("start_btn", UdButton);
         this.desc_lb = R.getComponent("desc_lb", UdLabel);
@@ -274,9 +271,6 @@ export class UdGameMain extends UdFullView {
         this.__recycleAllFruit();
         this.__resetRedLine();
         this.preview_info_node.active = true;
-        this.score_node_h.active = true;
-        this.score_node.active = false;
-        this.score_lb_h.string = this.__loadBestScore().toString();
         this.__applyScoreBadge();
         UdTimerHub.Ins.callFew(() => {
             UdHintingHub.Ins.onTrigger("gameIdle", {
@@ -309,7 +303,7 @@ export class UdGameMain extends UdFullView {
             return;
         }
         this.__playTokens = tokens;
-        this.remaining_time_lb.string = `剩余次数：${this.__playTokens}`;
+        this.remaining_time_lb.string = `${this.__playTokens}`;
     }
 
     private __persistTokens(tokens: number): void {
@@ -321,15 +315,13 @@ export class UdGameMain extends UdFullView {
 
     private __onStartTap(): void {
         if (this.__playTokens <= 0) {
-            UdToastHub.Ins.show("剩余次数不足");
+            UdToastHub.Ins.show("体力不足，请先获取体力");
             return;
         }
         this.__persistTokens(--this.__playTokens);
 
         this.__phase = PlayPhase.Running;
         this.preview_info_node.active = false;
-        this.score_node_h.active = false;
-        this.score_node.active = true;
         this.skip_btn.node.active = true;
         UdTimerHub.Ins.callFew(() => {
             UdHintingHub.Ins.onTrigger("gameRunning", { gamePhase: "running" });
@@ -664,7 +656,6 @@ export class UdGameMain extends UdFullView {
     private __commitBestScore(score: number): void {
         const best = Math.max(this.__loadBestScore(), Math.floor(score || 0));
         cc.sys.localStorage.setItem(UdGameMain.HIGHEST_SCORE_CACHE_KEY, `${best}`);
-        this.score_lb_h.string = `${best}`;
     }
 
     // ==================== GAME OVER ====================
@@ -858,8 +849,6 @@ export class UdGameMain extends UdFullView {
 
         this.__phase = PlayPhase.Running;
         this.preview_info_node.active = false;
-        this.score_node_h.active = false;
-        this.score_node.active = true;
         this.skip_btn.node.active = true;
 
         let active: cc.Node = undefined;

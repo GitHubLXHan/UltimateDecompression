@@ -26,46 +26,46 @@ export class UdGrayTint extends cc.Component {
         this._syncAll();
     }
 
-    // ============ 红色 ============
-    @property({ type: cc.Float, tooltip: "红色", range: [0, 1, 0.05] })
-    private _red = 0.5
-    @property({ type: cc.Float, tooltip: "红色", range: [0, 1, 0.05] })
-    get red(): number {
-        return this._red;
-    }
-    set red(v: number) {
-        this._red = v;
-        this._syncAll();
-    }
+    // // ============ 红色 ============
+    // @property({ type: cc.Float, tooltip: "红色", range: [0, 1, 0.05] })
+    // private _red = 0.5
+    // @property({ type: cc.Float, tooltip: "红色", range: [0, 1, 0.05] })
+    // get red(): number {
+    //     return this._red;
+    // }
+    // set red(v: number) {
+    //     this._red = v;
+    //     this._syncAll();
+    // }
 
-    // ============ 绿色 ============
-    @property({ type: cc.Float, tooltip: "绿色", range: [0, 1, 0.05] })
-    _green: number = 0.5;
-    @property({ type: cc.Float, tooltip: "绿色", range: [0, 1, 0.05] })
-    get green(): number {
-        return this._green;
-    }
-    set green(v: number) {
-        this._green = v;
-        this._syncAll();
-    }
+    // // ============ 绿色 ============
+    // @property({ type: cc.Float, tooltip: "绿色", range: [0, 1, 0.05] })
+    // _green: number = 0.5;
+    // @property({ type: cc.Float, tooltip: "绿色", range: [0, 1, 0.05] })
+    // get green(): number {
+    //     return this._green;
+    // }
+    // set green(v: number) {
+    //     this._green = v;
+    //     this._syncAll();
+    // }
 
 
-    // ============ 蓝色 ============
-    @property({ type: cc.Float, tooltip: "蓝色", range: [0, 1, 0.05] })
-    _blue: number = 0.5;
-    @property({ type: cc.Float, tooltip: "蓝色", range: [0, 1, 0.05] })
-    get blue(): number {
-        return this._blue;
-    }
-    set blue(v: number) {
-        this._blue = v;
-        this._syncAll();
-    }
+    // // ============ 蓝色 ============
+    // @property({ type: cc.Float, tooltip: "蓝色", range: [0, 1, 0.05] })
+    // _blue: number = 0.5;
+    // @property({ type: cc.Float, tooltip: "蓝色", range: [0, 1, 0.05] })
+    // get blue(): number {
+    //     return this._blue;
+    // }
+    // set blue(v: number) {
+    //     this._blue = v;
+    //     this._syncAll();
+    // }
 
     // ============ 亮度 ============
     @property({ type: cc.Float, tooltip: "亮度", range: [0, 1, 0.05] })
-    _brightness: number = 1;
+    _brightness: number = 0.1;
     @property({ type: cc.Float, tooltip: "亮度", range: [0, 1, 0.05] })
     get brightness(): number {
         return this._brightness;
