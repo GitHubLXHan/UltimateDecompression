@@ -1,4 +1,3 @@
-import { UdFullView } from "../../../core/view/compoment/UdFullView";
 import { UdAudioDef } from "../../../extension/audio/UdAudioDef";
 import { UdAudioHub } from "../../../extension/audio/UdAudioHub";
 import { UdSeqList } from "../../../extension/basecore/UdSeqList";
@@ -7,24 +6,31 @@ import { UdBtnSignal } from "../../../extension/components/GameBtn/UdBtnSignal";
 import { UdButton } from "../../../extension/game/UdButton";
 import { UdTimerHub } from "../../../extension/time/UdTimerHub";
 import { UdMathLabel } from "../../../extension/game/UdMathLabel";
+import { UdPopPanel } from "../../../core/view/compoment/UdPopPanel";
 
 export interface IUdGameScore {
     num?: number;
     enterMainGame: boolean;
+    result: number; // 1表示通关
+    /** 是否还有下一关可继续 */
+    hasNextStage?: boolean;
+    /** 点击"下一关"回调 */
+    onNextStage?: () => void;
 }
 
 @UdBindMeta
-export class UdGameResult extends UdFullView {
-    private __bgRoot: cc.Node;
+export class UdGameResult extends UdPopPanel {
     private __contentRoot: cc.Node;
     private __scoreLabel: UdMathLabel;
     private __maskNode: cc.Node;
+    private next_stage_btn: UdButton;
 
     private __tweenPool: UdSeqList<cc.Tween<cc.Node>> = new UdSeqList<cc.Tween<cc.Node>>();
     private __deferredId: number = -1;
     private __resultData: IUdGameScore;
 
     // ---- lifecycle ----
+
 
     public constructor() {
         super();
@@ -35,24 +41,22 @@ export class UdGameResult extends UdFullView {
 
     public init(root: cc.Node): void {
         super.init(root);
-        this.__bgRoot = this.UdResFinder.getNode("bg_node");
         this.__contentRoot = this.UdResFinder.getNode("content");
         this.__scoreLabel = this.UdResFinder.getComponent("content_lb", UdMathLabel);
         this.__maskNode = this.UdResFinder.getNode("mask_node");
+        this.next_stage_btn = this.UdResFinder.getComponent("next_stage_btn", UdButton);
 
-        this.__scoreLabel.prefix = "恭喜达到";
-        this.__scoreLabel.suffix = "分";
-        this.__scoreLabel.value = 0;
+        this.isClickMaskerToClose = false;
     }
 
     protected addEvents(): void {
         super.addEvents();
-        this.__bgRoot.getComponent(UdButton).addListener(UdBtnSignal.FingerUp, this.close, this);
+        this.next_stage_btn.addListener(UdBtnSignal.FingerTap, this.__onNextStageTap, this);
     }
 
     protected removeEvents(): void {
         super.removeEvents();
-        this.__bgRoot.getComponent(UdButton).removeListener(UdBtnSignal.FingerUp, this.close, this);
+        this.next_stage_btn.removeListener(UdBtnSignal.FingerTap, this.__onNextStageTap, this);
     }
 
     // ---- data binding ----
@@ -63,6 +67,13 @@ export class UdGameResult extends UdFullView {
 
         // Victory sfx
         UdAudioHub.Ins.playSound(UdAudioDef.CombatWinSfx);
+
+        this.__scoreLabel.prefix = `${data.result ? "通关成功\n" : "通关失败\n"}本局达到`;
+        this.__scoreLabel.suffix = "分";
+        this.__scoreLabel.value = 0;
+
+        // "下一关"按钮：通关且有下一关时显示
+        this.next_stage_btn.node.active = data.result === 1 && data.hasNextStage === true;
 
         // Score display
         UdTimerHub.Ins.callLater(0.6, () => {
@@ -76,6 +87,10 @@ export class UdGameResult extends UdFullView {
                 this.__deferredId = -1;
                 this.__repositionContent();
             });
+        });
+
+        UdTimerHub.Ins.callLater(2, () => {
+            this.isClickMaskerToClose = true;
         });
     }
 
@@ -123,6 +138,14 @@ export class UdGameResult extends UdFullView {
             .start();
 
         this.__tweenPool.add(tw);
+    }
+
+    // ---- next stage ----
+
+    private __onNextStageTap(): void {
+        if (this.__resultData && this.__resultData.onNextStage) {
+            this.__resultData.onNextStage();
+        }
     }
 
     // ---- teardown ----

@@ -48,7 +48,7 @@ export class UdAppEntry extends cc.Component {
 		UdToastHub.Ins.init(UdToastView, UdPanelHub.Ins);
 		UdHintingHub.Ins.init(UdHintingView, UdPanelHub.Ins);
 		// 【测试】每次启动清空指引记录；上线后注释掉下一行
-		UdHintingHub.Ins.clearTestPersistence();
+		// UdHintingHub.Ins.clearTestPersistence();
 		UdAudioHub.Ins.init(
 			UdAssetPathKit.getBgmPath(""),
 			UdAssetPathKit.getSoundPath(""),

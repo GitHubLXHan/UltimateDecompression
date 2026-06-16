@@ -35,6 +35,8 @@ export class UdCoinFly implements IUdTickable {
 
     private static _ins: UdCoinFly;
     private static _batchIdGen: number = 0;
+    /** 分数结算完成回调（金币全部到达后触发） */
+    static onScoreCommit: (() => void) | null = null;
 
     private _targetLabel: UdMathLabel | null = null;
     private _targetNode: cc.Node | null = null;
@@ -265,14 +267,17 @@ export class UdCoinFly implements IUdTickable {
         }
         this._pendingScore = 0;
 
-        // 分数更新完成后触发指引事件（取更新后的值）
+        // 分数结算后触发指引事件 + 进度条回调（每次 _commitScore 都触发，确保进度条跟得上）
+        const currentScore = this._targetLabel ? this._targetLabel.value : 0;
         if (score > 0) {
-            const currentScore = this._targetLabel ? this._targetLabel.value : 0;
             console.log("[UdCoinFly] gameScore trigger — currentScore=", currentScore, "score added=", score);
-            UdHintingHub.Ins.onTrigger("gameScore", {
-                gamePhase: "running",
-                score: currentScore,
-            });
+        }
+        UdHintingHub.Ins.onTrigger("gameScore", {
+            gamePhase: "running",
+            score: currentScore,
+        });
+        if (UdCoinFly.onScoreCommit) {
+            UdCoinFly.onScoreCommit();
         }
     }
 

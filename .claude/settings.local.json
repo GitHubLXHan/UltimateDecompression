@@ -15,7 +15,9 @@
       "Bash(sed -i '' 's/\"\\\\[UdHinting\\\\] blocked - already guiding\"/\"\\\\[UdHinting\\\\] blocked - force guiding active\"/' /Users/admin/Documents/Code/UltimateDecompression/assets/scripts/module/UdHinting/UdHintingHub.ts)",
       "Bash(sed -i '' 's/\"isGuiding=\", this.isGuiding\\(\\)\\);/\"isGuiding=\", this.isGuiding\\(\\), \"isForce=\", this.isForceGuiding\\(\\)\\);/' /Users/admin/Documents/Code/UltimateDecompression/assets/scripts/module/UdHinting/UdHintingHub.ts)",
       "Bash(sed -i '' 's/if \\(this\\\\.isGuiding\\(\\)\\)/if \\(this.isForceGuiding\\(\\)\\)/' /Users/admin/Documents/Code/UltimateDecompression/assets/scripts/module/UdHinting/UdHintingHub.ts)",
-      "Bash(sed -i '' 's/\"isGuiding=\", this.isGuiding\\(\\)\\)/\"isGuiding=\", this.isGuiding\\(\\), \"isForce=\", this.isForceGuiding\\(\\)\\)/' /Users/admin/Documents/Code/UltimateDecompression/assets/scripts/module/UdHinting/UdHintingHub.ts)"
+      "Bash(sed -i '' 's/\"isGuiding=\", this.isGuiding\\(\\)\\)/\"isGuiding=\", this.isGuiding\\(\\), \"isForce=\", this.isForceGuiding\\(\\)\\)/' /Users/admin/Documents/Code/UltimateDecompression/assets/scripts/module/UdHinting/UdHintingHub.ts)",
+      "Bash(uuidgen)",
+      "Bash(python3 -c \"import uuid; print\\(uuid.uuid4\\(\\)\\)\")"
     ]
   }
 }

@@ -21,6 +21,9 @@ import { UdComboPraiseHub } from "../combo/UdComboPraiseHub";
 import { UdCoinFly } from "../coin/UdCoinFly";
 import { UdMathLabel } from "../../../extension/game/UdMathLabel";
 import { IUdTipViewData, UdTipView } from "../../udCommon/views/UdTipView";
+import { getLevelConfig, IUdLevelConfig } from "../config/UdLevelConfig";
+import { IUdTickable } from "../../../extension/update/IUdTickable";
+import { UdTickHub } from "../../../extension/update/UdTickHub";
 
 /** Game play state enum */
 const enum PlayPhase {
@@ -54,12 +57,13 @@ interface IUdGameSave {
     dropCount: number;
     score: number;
     fruits: IUdGameSaveFruit[];
+    stage: number;
 }
 
 @UdBindMeta
 export class UdGameMain extends UdFullView {
     // ---- cache keys ----
-    private static readonly HIGHEST_SCORE_CACHE_KEY = "ud_best_v1";
+    private static readonly STAGE_CACHE_KEY = "ud_stage_v1";
     private static readonly PLAY_TOKEN_CACHE_KEY = "ud_tokens_v1";
     private static readonly GAME_SAVE_CACHE_KEY = "ud_game_save_v1";
     private static readonly COMBO_WINDOW_SEC = 1.2;
@@ -74,6 +78,7 @@ export class UdGameMain extends UdFullView {
     preview_info_node: cc.Node = undefined;
     score_node: cc.Node = undefined;
     bg_img: cc.Node = undefined;
+    title_node: cc.Node = undefined;
 
     // ---- serialized labels & buttons ----
     desc_lb: UdLabel = undefined;
@@ -81,7 +86,7 @@ export class UdGameMain extends UdFullView {
     button_touch: UdButton = undefined;
     start_btn: UdButton = undefined;
     remaining_time_lb: UdLabel = undefined;
-    add_time_btn: UdButton = undefined;
+    add_power_btn: UdButton = undefined;
     setting_btn: UdButton = undefined;
     record_btn: UdButton = undefined;
     game_root: cc.Node = undefined;
@@ -90,6 +95,8 @@ export class UdGameMain extends UdFullView {
     ground_3_collider: cc.PhysicsBoxCollider = undefined;
     help_btn: UdButton = undefined;
     stage_lb: UdLabel = undefined;
+    passed_pro_bar: cc.ProgressBar = undefined;
+    cost_power_lb: UdLabel = undefined;
 
     // ---- private nodes ----
     private skip_btn: UdButton;
@@ -124,6 +131,19 @@ export class UdGameMain extends UdFullView {
     __rawConfig = undefined;
     __playTokens: number = 0;
 
+    // ---- level system ----
+    private __currentStage: number = 1;
+    private __levelConfig: IUdLevelConfig = null;
+    /** 进度条动画代理对象（由 cc.tween 驱动，UdTickHub 每帧同步到 passed_pro_bar） */
+    private __progressAnimData = { value: 0 };
+    private __progressTickHandler: IUdTickable = null;
+
+    /** 点击"下一关"后跳过待机界面直接开始 */
+    private __autoStartNext: boolean = false;
+
+    /** 游戏已结束标志，防止结算界面被多次打开 */
+    private __gameEnded: boolean = false;
+
     /** 连续合成计数（窗口内） */
     private __comboCount = 0;
     private __comboResetTimer = -1;
@@ -155,7 +175,7 @@ export class UdGameMain extends UdFullView {
         this.start_btn = R.getComponent("start_btn", UdButton);
         this.desc_lb = R.getComponent("desc_lb", UdLabel);
         this.remaining_time_lb = R.getComponent("remaining_time_lb", UdLabel);
-        this.add_time_btn = R.getComponent("add_time_btn", UdButton);
+        this.add_power_btn = R.getComponent("add_power_btn", UdButton);
         this.boom_eff = R.getNode("boom_eff");
         this.skip_btn = R.getComponent("skip_btn", UdButton);
         this.button_touch = R.getComponent("UdGameMain", UdButton);
@@ -166,7 +186,11 @@ export class UdGameMain extends UdFullView {
         this.ground_2_collider = R.getComponent("ground_2", cc.PhysicsBoxCollider);
         this.ground_3_collider = R.getComponent("ground_3", cc.PhysicsBoxCollider);
         this.help_btn = R.getComponent("help_btn", UdButton);
+        this.title_node = R.getNode("title_node");
         this.bg_img = R.getNode("bg_img");
+        this.stage_lb = R.getComponent("stage_lb", UdLabel);
+        this.passed_pro_bar = R.getComponent("passed_pro_bar", cc.ProgressBar);
+        this.cost_power_lb = R.getComponent("cost_power_lb", UdLabel);
     }
 
     protected addEvents(): void {
@@ -174,7 +198,7 @@ export class UdGameMain extends UdFullView {
         this.button_touch.addListener(UdBtnSignal.FingerDown, this.__onScreenTap, this);
         this.start_btn.addListener(UdBtnSignal.FingerTap, this.__onStartTap, this);
         this.skip_btn.addListener(UdBtnSignal.FingerTap, this.__onSkipTap, this);
-        this.add_time_btn.addListener(UdBtnSignal.FingerTap, this.__onTokenAdd, this);
+        this.add_power_btn.addListener(UdBtnSignal.FingerTap, this.__onTokenAdd, this);
         UdPanelHub.Ins.addListener(UdPanelSignal.PanelHide, this.__onResultDismissed, this);
         this.setting_btn.addListener(UdBtnSignal.FingerTap, this.__onSettingTap, this);
         this.help_btn.addListener(UdBtnSignal.FingerTap, this.__onHelpTap, this);
@@ -186,7 +210,7 @@ export class UdGameMain extends UdFullView {
         this.button_touch.removeListener(UdBtnSignal.FingerDown, this.__onScreenTap, this);
         this.start_btn.removeListener(UdBtnSignal.FingerTap, this.__onStartTap, this);
         this.skip_btn.removeListener(UdBtnSignal.FingerTap, this.__onSkipTap, this);
-        this.add_time_btn.removeListener(UdBtnSignal.FingerTap, this.__onTokenAdd, this);
+        this.add_power_btn.removeListener(UdBtnSignal.FingerTap, this.__onTokenAdd, this);
         UdPanelHub.Ins.removeListener(UdPanelSignal.PanelHide, this.__onResultDismissed, this);
         this.setting_btn.removeListener(UdBtnSignal.FingerTap, this.__onSettingTap, this);
         this.record_btn.removeListener(UdBtnSignal.FingerTap, this.__onRecordTap, this);
@@ -213,10 +237,30 @@ export class UdGameMain extends UdFullView {
         ];
 
         this.__computeScaledSizes();
+        this.__currentStage = this.__loadStage();
+        this.__levelConfig = getLevelConfig(this.__currentStage);
+        // 金币动画完成后同步进度条，并检测是否通关
+        UdCoinFly.onScoreCommit = () => {
+            // 游戏已结束（结算界面已打开），忽略后续到达的金币
+            if (this.__gameEnded) return;
+            this.__refreshProgressBar();
+            // 到达通关分数自动结束本局
+            const cfg = this.__getCurrentLevelConfig();
+            if (cfg.passScore > 0 && this.__score >= cfg.passScore) {
+                this.__notifyGameOver(true);
+            }
+        };
         this.__resetState();
         this.__enterIdleUI();
         this.__prewarmFruitCache();
         this.__syncTokenDisplay();
+        // 点击"下一关"后跳过待机界面直接开始
+        if (this.__autoStartNext) {
+            this.__autoStartNext = false;
+            UdTimerHub.Ins.callFew(() => {
+                this.__onStartTap();
+            });
+        }
         UdHintingHub.Ins.onTrigger("viewReady", {
             view: "UdGameMain",
             gamePhase: "idle",
@@ -228,12 +272,16 @@ export class UdGameMain extends UdFullView {
     private __resetState(): void {
         this.__score = 0;
         this.__phase = PlayPhase.Idle;
+        this.__gameEnded = false;
         this.__activeFruit = undefined;
         this.__pendingFruit = undefined;
         this.__dropCount = 0;
         this.skip_btn.node.active = false;
         this.__resetCombo();
         UdComboPraiseHub.Ins.hide();
+        this.__applyLevelConfig();
+        // 重新启用物理（结算时被关闭）
+        cc.director.getPhysicsManager().enabled = true;
     }
 
     private __bumpCombo(): number {
@@ -271,6 +319,8 @@ export class UdGameMain extends UdFullView {
         this.__recycleAllFruit();
         this.__resetRedLine();
         this.preview_info_node.active = true;
+        this.title_node.active = true;
+        this.add_power_btn.node.active = true;
         this.__applyScoreBadge();
         UdTimerHub.Ins.callFew(() => {
             UdHintingHub.Ins.onTrigger("gameIdle", {
@@ -314,14 +364,18 @@ export class UdGameMain extends UdFullView {
     // ==================== START FLOW ====================
 
     private __onStartTap(): void {
-        if (this.__playTokens <= 0) {
+        const cfg = this.__getCurrentLevelConfig();
+        if (this.__playTokens < cfg.staminaCost) {
             UdToastHub.Ins.show("体力不足，请先获取体力");
             return;
         }
-        this.__persistTokens(--this.__playTokens);
+        this.__playTokens -= cfg.staminaCost;
+        this.__persistTokens(this.__playTokens);
 
         this.__phase = PlayPhase.Running;
         this.preview_info_node.active = false;
+        this.title_node.active = false;
+        this.add_power_btn.node.active = false;
         this.skip_btn.node.active = true;
         UdTimerHub.Ins.callFew(() => {
             UdHintingHub.Ins.onTrigger("gameRunning", { gamePhase: "running" });
@@ -465,6 +519,8 @@ export class UdGameMain extends UdFullView {
     // ==================== MERGE / COLLISION ====================
 
     private __onFruitCollide({ self, other }: { self: cc.PhysicsCollider; other: cc.PhysicsCollider }): void {
+        // 游戏已结束，忽略后续碰撞
+        if (this.__gameEnded) return;
         other.node.off('CollideEvent');
         self.node.off('CollideEvent');
 
@@ -523,6 +579,11 @@ export class UdGameMain extends UdFullView {
 
                 // Score tracked for save / game-over, display updated by coin batch
                 this.__score += earnedScore;
+                // 得分后立即检测通关（不等金币动画），Notified 守卫防重复
+                const cfg = this.__getCurrentLevelConfig();
+                if (cfg.passScore > 0 && this.__score >= cfg.passScore) {
+                    this.__notifyGameOver(true);
+                }
 
             });
         }
@@ -632,7 +693,10 @@ export class UdGameMain extends UdFullView {
     // ==================== SCORE ====================
 
     private __applyScoreBadge(): void {
-        this.score_lb.string = `${this.__score}`;
+        const cfg = this.__getCurrentLevelConfig();
+        this.score_lb.suffix = ` / ${cfg.passScore}`;
+        this.score_lb.value = this.__score;
+        this.__refreshProgressBar();
         this.__tryHintOnScore();
     }
 
@@ -647,15 +711,77 @@ export class UdGameMain extends UdFullView {
         });
     }
 
-    private __loadBestScore(): number {
-        const raw = cc.sys.localStorage.getItem(UdGameMain.HIGHEST_SCORE_CACHE_KEY);
-        const val = Number(raw || 0);
-        return Number.isFinite(val) ? Math.max(0, Math.floor(val)) : 0;
+    // ==================== LEVEL SYSTEM ====================
+
+    private __loadStage(): number {
+        const raw = cc.sys.localStorage.getItem(UdGameMain.STAGE_CACHE_KEY);
+        const val = Number(raw || 1);
+        return Number.isFinite(val) && val >= 1 ? Math.floor(val) : 1;
     }
 
-    private __commitBestScore(score: number): void {
-        const best = Math.max(this.__loadBestScore(), Math.floor(score || 0));
-        cc.sys.localStorage.setItem(UdGameMain.HIGHEST_SCORE_CACHE_KEY, `${best}`);
+    private __saveStage(stage: number): void {
+        cc.sys.localStorage.setItem(UdGameMain.STAGE_CACHE_KEY, `${stage}`);
+    }
+
+    private __getCurrentLevelConfig(): IUdLevelConfig {
+        if (!this.__levelConfig) {
+            this.__levelConfig = getLevelConfig(this.__currentStage);
+        }
+        return this.__levelConfig;
+    }
+
+    /** 根据当前关卡配置刷新 UI（stage_lb / cost_power_lb / score_lb / progress bar） */
+    private __applyLevelConfig(): void {
+        const cfg = this.__getCurrentLevelConfig();
+        this.stage_lb.string = `第${cfg.stage}关`;
+        this.cost_power_lb.string = `${cfg.staminaCost}`;
+        this.score_lb.suffix = ` / ${cfg.passScore}`;
+        this.__refreshProgressBar();
+    }
+
+    /** 如果本局分数达到通关线，推进到下一关 */
+    private __advanceStageIfNeeded(): void {
+        const cfg = this.__getCurrentLevelConfig();
+        if (cfg.passScore > 0 && this.__score >= cfg.passScore) {
+            const nextStage = this.__currentStage + 1;
+            const nextCfg = getLevelConfig(nextStage);
+            if (nextCfg.stage === nextStage) {
+                this.__currentStage = nextStage;
+                this.__levelConfig = nextCfg;
+            }
+        }
+        this.__saveStage(this.__currentStage);
+    }
+
+    /** 计算进度目标值并启动动画 */
+    private __refreshProgressBar(): void {
+        const cfg = this.__getCurrentLevelConfig();
+        const target = cfg.passScore > 0
+            ? Math.min(this.__score / cfg.passScore, 1)
+            : 0;
+        this.__animateProgress(target);
+    }
+
+    /** 使用 cc.tween + UdTickHub 平滑动画进度条 */
+    private __animateProgress(target: number): void {
+        // tick handler 持久化，不反复创建/销毁
+        if (!this.__progressTickHandler) {
+            this.__progressTickHandler = {
+                onUpdate: (): void => {
+                    if (this.passed_pro_bar) {
+                        this.passed_pro_bar.progress = this.__progressAnimData.value;
+                    }
+                },
+            };
+            UdTickHub.Ins.addUpdateHandler(this.__progressTickHandler);
+        }
+
+        // 停止旧动画，从当前位置开始新动画
+        cc.Tween.stopAllByTarget(this.__progressAnimData);
+        this.__progressAnimData.value = this.passed_pro_bar.progress;
+        cc.tween(this.__progressAnimData)
+            .to(0.3, { value: target }, { easing: cc.easing.sineOut })
+            .start();
     }
 
     // ==================== GAME OVER ====================
@@ -686,18 +812,38 @@ export class UdGameMain extends UdFullView {
     }
 
     private __notifyGameOver(enterMainGame: boolean = true): void {
-        if (this.__phase === PlayPhase.Notified) return;
+        if (this.__gameEnded) return;
+
+        // 在推进关卡前先判断本局是否通关（推进后 cfg 会变）
+        const cfg = this.__getCurrentLevelConfig();
+        const isCleared = cfg.passScore > 0 && this.__score >= cfg.passScore;
+
+        // 在分数重置前检查是否通关并推进关卡
+        this.__advanceStageIfNeeded();
+
+        this.__gameEnded = true;
         this.__phase = PlayPhase.Notified;
+
+        // 关闭物理，防止结算后继续碰撞触发新的金币
+        cc.director.getPhysicsManager().enabled = false;
 
         this.__clearSave();
 
-        const displayScore = Math.round(this.score_lb.value | 0);
+        const displayScore = this.__score;
+        // 下一关是否存在
+        const nextCfg = getLevelConfig(this.__currentStage + 1);
+        const hasNextStage = isCleared && nextCfg.stage === this.__currentStage + 1;
         const payload: IUdGameScore = {
             num: displayScore,
             enterMainGame,
+            result: isCleared ? 1 : 0,
+            hasNextStage,
+            onNextStage: hasNextStage ? () => {
+                this.__autoStartNext = true;
+                UdPanelHub.Ins.close(UdGameResult, false);
+            } : undefined,
         };
         UdPanelHub.Ins.open(UdGameResult, UdLayerKind.Panel, payload);
-        this.__commitBestScore(displayScore);
     }
 
     private __onResultDismissed(target: UdPanelHub, args: [string]): void {
@@ -805,6 +951,7 @@ export class UdGameMain extends UdFullView {
             dropCount: this.__dropCount,
             score: this.__score,
             fruits,
+            stage: this.__currentStage,
         };
     }
 
@@ -845,10 +992,18 @@ export class UdGameMain extends UdFullView {
         this.__dropCount = save.dropCount;
         this.__score = save.score;
 
+        // 从存档恢复关卡
+        if (save.stage != null && save.stage >= 1) {
+            this.__currentStage = save.stage;
+            this.__levelConfig = getLevelConfig(this.__currentStage);
+        }
+
         this.__detachAllFruitsFromField();
 
         this.__phase = PlayPhase.Running;
         this.preview_info_node.active = false;
+        this.title_node.active = false;
+        this.add_power_btn.node.active = false;
         this.skip_btn.node.active = true;
 
         let active: cc.Node = undefined;
@@ -908,6 +1063,13 @@ export class UdGameMain extends UdFullView {
         this.__purgeTimers();
         this.__recycleAllFruit();
         this.__resetRedLine();
+        // 清理金币回调 + 进度条动画 tick handler
+        UdCoinFly.onScoreCommit = null;
+        if (this.__progressTickHandler) {
+            UdTickHub.Ins.removeUpdateHandler(this.__progressTickHandler);
+            this.__progressTickHandler = null;
+        }
+        cc.Tween.stopAllByTarget(this.__progressAnimData);
     }
 
     private _updateGroundSize(height: number) {
