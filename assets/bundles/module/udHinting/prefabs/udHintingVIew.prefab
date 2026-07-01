@@ -358,7 +358,7 @@
       }
     ],
     "paused": false,
-    "defaultSkin": "",
+    "defaultSkin": "default",
     "defaultAnimation": "common_zhiyinquan",
     "_preCacheMode": 0,
     "_cacheMode": 0,

@@ -31,7 +31,6 @@ export class UdAppEntry extends cc.Component {
 		let size = cc.view.getDesignResolutionSize();
 		this._width = size.width;
 		this._height = size.height;
-
 		this.doHook();
 	}
 

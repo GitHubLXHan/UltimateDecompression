@@ -79,12 +79,14 @@ export class UdGameMain extends UdFullView {
     score_node: cc.Node = undefined;
     bg_img: cc.Node = undefined;
     title_node: cc.Node = undefined;
+    age_tip_node: cc.Node = undefined;
 
     // ---- serialized labels & buttons ----
     desc_lb: UdLabel = undefined;
     score_lb: UdMathLabel = undefined;
     button_touch: UdButton = undefined;
     start_btn: UdButton = undefined;
+    cur_power_node: cc.Node = undefined;
     remaining_time_lb: UdLabel = undefined;
     add_power_btn: UdButton = undefined;
     setting_btn: UdButton = undefined;
@@ -174,6 +176,7 @@ export class UdGameMain extends UdFullView {
         this.preview_info_node = R.getNode("preview_info_node");
         this.start_btn = R.getComponent("start_btn", UdButton);
         this.desc_lb = R.getComponent("desc_lb", UdLabel);
+        this.cur_power_node = R.getNode("cur_power_node");
         this.remaining_time_lb = R.getComponent("remaining_time_lb", UdLabel);
         this.add_power_btn = R.getComponent("add_power_btn", UdButton);
         this.boom_eff = R.getNode("boom_eff");
@@ -187,6 +190,7 @@ export class UdGameMain extends UdFullView {
         this.ground_3_collider = R.getComponent("ground_3", cc.PhysicsBoxCollider);
         this.help_btn = R.getComponent("help_btn", UdButton);
         this.title_node = R.getNode("title_node");
+        this.age_tip_node = R.getNode("age_tip_node");
         this.bg_img = R.getNode("bg_img");
         this.stage_lb = R.getComponent("stage_lb", UdLabel);
         this.passed_pro_bar = R.getComponent("passed_pro_bar", cc.ProgressBar);
@@ -346,12 +350,11 @@ export class UdGameMain extends UdFullView {
 
     private __syncTokenDisplay(): void {
         let raw = cc.sys.localStorage.getItem(UdGameMain.PLAY_TOKEN_CACHE_KEY);
-        let tokens = Number(raw);
-        if (raw == null || isNaN(Number(raw))) {
-            tokens = 999;
-            this.__persistTokens(tokens);
+        if (raw != "0" && !(raw > 0)) {
+            this.__persistTokens(12);
             return;
         }
+        let tokens = Number(raw);
         this.__playTokens = tokens;
         this.remaining_time_lb.string = `${this.__playTokens}`;
     }
@@ -1073,6 +1076,7 @@ export class UdGameMain extends UdFullView {
     }
 
     private _updateGroundSize(height: number) {
+        return; // 暂时不调整地面高度，避免影响碰撞
         this.game_root.height = height;
         this.game_root.getComponent(cc.Widget).updateAlignment();
         this.ground_2_collider.node.height = height;

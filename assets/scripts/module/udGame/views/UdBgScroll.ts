@@ -78,12 +78,28 @@ export class UdBgScroll extends cc.Component {
 
     private _syncAll(): void {
         this._applyTexture();
+        this._applyNodeTransform();
         this._applyUvRange();
         this._applyShowUvRange();
         this._applyRowUvOffset();
         this._applyUvMoveSpeed();
         this._applyBrightness();
         this._applyShowTextureRange();
+    }
+
+    private _applyNodeTransform(): void {
+        // 启用shader中的世界坐标逆变换路径，使顶点着色器从世界坐标计算[0,1]归一化UV，
+        // 从而绕过Sprite TILED模式下UV范围过大（[0,36]×[0,64]）的问题。
+        this._setProp("useInvertMat", 1.0);
+        this._setProp("nodeSize", cc.v2(this.node.width, this.node.height));
+        this._setProp("nodeAnchor", cc.v2(this.node.anchorX, this.node.anchorY));
+
+        // 计算世界矩阵的逆矩阵，用于将世界坐标转回局部坐标
+        const worldMat = new cc.Mat4();
+        this.node.getWorldMatrix(worldMat);
+        const invMat = new cc.Mat4();
+        cc.Mat4.invert(invMat, worldMat);
+        this._setProp("worldInvertMat", invMat);
     }
 
     private _applyTexture(): void {

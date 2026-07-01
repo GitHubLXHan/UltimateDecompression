@@ -1,8 +1,5 @@
 import { UdBindMeta } from "../basecore/UdDecoratorKit";
 
-/**
- * Created by yangsong on 15-1-20.
- */
 @UdBindMeta
 export class UdDeviceKit {
 
