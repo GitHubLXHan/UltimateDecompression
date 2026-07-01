@@ -202,7 +202,7 @@ CCProgram fs2 %{
           vec2 baseScale = vec2(1.0 / showUvWidth, 1.0 / showUvHeight);
           uv1 *= baseScale;
           o = texture2D(detailTexture, uv1);
-          o *= brightness;
+          o.rgb *= brightness;
       } else {
         discard;
       }
