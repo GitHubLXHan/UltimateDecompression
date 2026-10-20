@@ -91,6 +91,7 @@ export class UdGameMain extends UdFullView {
     add_power_btn: UdButton = undefined;
     setting_btn: UdButton = undefined;
     record_btn: UdButton = undefined;
+    community_btn: UdButton = undefined;
     game_root: cc.Node = undefined;
     ground_1: cc.Node = undefined;
     ground_2_collider: cc.PhysicsBoxCollider = undefined;
@@ -184,6 +185,7 @@ export class UdGameMain extends UdFullView {
         this.button_touch = R.getComponent("UdGameMain", UdButton);
         this.setting_btn = R.getComponent("setting_btn", UdButton);
         this.record_btn = R.getComponent("record_btn", UdButton);
+        this.community_btn = R.getComponent("community_btn", UdButton);
         this.game_root = R.getNode("game_root");
         this.ground_1 = R.getNode("ground_1");
         this.ground_2_collider = R.getComponent("ground_2", cc.PhysicsBoxCollider);
@@ -207,6 +209,7 @@ export class UdGameMain extends UdFullView {
         this.setting_btn.addListener(UdBtnSignal.FingerTap, this.__onSettingTap, this);
         this.help_btn.addListener(UdBtnSignal.FingerTap, this.__onHelpTap, this);
         this.record_btn.addListener(UdBtnSignal.FingerTap, this.__onRecordTap, this);
+        this.community_btn.addListener(UdBtnSignal.FingerTap, this.__onCommunityTap, this);
     }
 
     protected removeEvents(): void {
@@ -218,6 +221,7 @@ export class UdGameMain extends UdFullView {
         UdPanelHub.Ins.removeListener(UdPanelSignal.PanelHide, this.__onResultDismissed, this);
         this.setting_btn.removeListener(UdBtnSignal.FingerTap, this.__onSettingTap, this);
         this.record_btn.removeListener(UdBtnSignal.FingerTap, this.__onRecordTap, this);
+        this.community_btn.removeListener(UdBtnSignal.FingerTap, this.__onCommunityTap, this);
     }
 
     public updateView(arg?: any): void {
@@ -859,6 +863,18 @@ export class UdGameMain extends UdFullView {
 
     private __onSettingTap(): void {
         UdPanelHub.Ins.open(UdSettingView, UdLayerKind.Panel);
+    }
+
+    /** 点击社区按钮，打开微信游戏圈（逻辑在 build-templates/wechatgame/platform.js） */
+    private __onCommunityTap(): void {
+        const _window: any = window;
+        if (cc.sys.platform === cc.sys.WECHAT_GAME
+            && _window.UdPlatform
+            && _window.UdPlatform.openGameClub) {
+            _window.UdPlatform.openGameClub();
+        } else {
+            UdToastHub.Ins.show("当前环境不支持游戏圈");
+        }
     }
 
     private __onHelpTap(): void {
