@@ -1,0 +1,1 @@
+{"paths":{"0":["prefabs/view/UdSettingView",0]},"types":["cc.Prefab"],"uuids":["c2lAi5IvxJy6gyo6asu7HF","ecpdLyjvZBwrvm+cedCcQy"],"scenes":{},"redirect":[1,0],"deps":["internal"],"packs":{},"name":"udSetting","importBase":"import","nativeBase":"native","debug":false,"isZip":false,"encrypted":false,"versions":{"import":[0,"57b7e"],"native":[]}}

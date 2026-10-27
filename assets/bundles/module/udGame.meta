@@ -6,7 +6,7 @@
   "bundleName": "",
   "priority": 7,
   "compressionType": {
-    "wechatgame": "merge_all_json",
+    "wechatgame": "subpackage",
     "web-mobile": "merge_all_json"
   },
   "optimizeHotUpdate": {
@@ -18,7 +18,7 @@
     "web-mobile": false
   },
   "isRemoteBundle": {
-    "wechatgame": true,
+    "wechatgame": false,
     "web-mobile": false
   },
   "subMetas": {}

@@ -8,6 +8,11 @@
     ]
   ],
   "excluded-modules": [
+    "DragonBones",
+    "PageView",
+    "PageViewIndicator",
+    "TiledMap",
+    "WebView",
     "3D",
     "3D Primitive",
     "3D Physics/cannon.js",
@@ -37,6 +42,6 @@
       "enable": false
     }
   },
-  "last-module-event-record-time": 1792389983185,
+  "last-module-event-record-time": 1793086934987,
   "start-scene": "f799581b-3137-47b7-8b73-2878bd6e58f6"
 }

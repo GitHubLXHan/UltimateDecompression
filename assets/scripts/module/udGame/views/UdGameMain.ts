@@ -53,6 +53,8 @@ interface IUdGameSaveFruit {
 
 interface IUdGameSave {
     v: number;
+    /** 所属模式：false=关卡，true=积分 */
+    scoreMode?: boolean;
     spawnSequence: number[];
     dropCount: number;
     score: number;
@@ -60,12 +62,21 @@ interface IUdGameSave {
     stage: number;
 }
 
+/** 积分模式固定配置：无通关分数，每次消耗 1 体力 */
+const SCORE_MODE_LEVEL_CONFIG: IUdLevelConfig = { stage: 1, passScore: 0, staminaCost: 1 };
+
 @UdBindMeta
 export class UdGameMain extends UdFullView {
     // ---- cache keys ----
     private static readonly STAGE_CACHE_KEY = "ud_stage_v1";
     private static readonly PLAY_TOKEN_CACHE_KEY = "ud_tokens_v1";
     private static readonly GAME_SAVE_CACHE_KEY = "ud_game_save_v1";
+    /** 积分模式存档（与关卡模式存档相互独立） */
+    private static readonly GAME_SAVE_SCORE_CACHE_KEY = "ud_game_save_score_v1";
+    /** 积分模式历史最高分 */
+    private static readonly HIGH_SCORE_CACHE_KEY = "ud_high_score_v1";
+    /** 上次选择的模式（0=关卡，1=积分） */
+    private static readonly MODE_CACHE_KEY = "ud_mode_v1";
     private static readonly COMBO_WINDOW_SEC = 1.2;
     private static readonly COMBO_MIN = 2;
 
@@ -100,6 +111,10 @@ export class UdGameMain extends UdFullView {
     stage_lb: UdLabel = undefined;
     passed_pro_bar: cc.ProgressBar = undefined;
     cost_power_lb: UdLabel = undefined;
+    toggle1: cc.Toggle = undefined;
+    toggle2: cc.Toggle = undefined;
+    toggle1_lb: cc.Label = undefined;
+    toggle2_lb: cc.Label = undefined;
 
     // ---- private nodes ----
     private skip_btn: UdButton;
@@ -151,6 +166,10 @@ export class UdGameMain extends UdFullView {
     private __comboCount = 0;
     private __comboResetTimer = -1;
 
+    // ---- mode system ----
+    /** 当前模式：false=关卡模式，true=积分模式 */
+    private __scoreMode: boolean = false;
+
     // ==================== LIFECYCLE ====================
 
     public constructor() {
@@ -197,6 +216,11 @@ export class UdGameMain extends UdFullView {
         this.stage_lb = R.getComponent("stage_lb", UdLabel);
         this.passed_pro_bar = R.getComponent("passed_pro_bar", cc.ProgressBar);
         this.cost_power_lb = R.getComponent("cost_power_lb", UdLabel);
+        this.toggle1 = R.getComponent("toggle1", cc.Toggle);
+        this.toggle2 = R.getComponent("toggle2", cc.Toggle);
+        // 预制上这两个节点是普通 cc.Label（UdLabel 继承自 cc.Label，取基类两种都兼容）
+        this.toggle1_lb = R.getComponent("toggle1_lb", cc.Label);
+        this.toggle2_lb = R.getComponent("toggle2_lb", cc.Label);
     }
 
     protected addEvents(): void {
@@ -210,6 +234,11 @@ export class UdGameMain extends UdFullView {
         this.help_btn.addListener(UdBtnSignal.FingerTap, this.__onHelpTap, this);
         this.record_btn.addListener(UdBtnSignal.FingerTap, this.__onRecordTap, this);
         this.community_btn.addListener(UdBtnSignal.FingerTap, this.__onCommunityTap, this);
+        // 模式切换（toggle 本体及其文字都可点击）
+        if (this.toggle1) this.toggle1.node.on(cc.Node.EventType.TOUCH_END, this.__onToggle1Tap, this);
+        if (this.toggle1_lb) this.toggle1_lb.node.on(cc.Node.EventType.TOUCH_END, this.__onToggle1Tap, this);
+        if (this.toggle2) this.toggle2.node.on(cc.Node.EventType.TOUCH_END, this.__onToggle2Tap, this);
+        if (this.toggle2_lb) this.toggle2_lb.node.on(cc.Node.EventType.TOUCH_END, this.__onToggle2Tap, this);
     }
 
     protected removeEvents(): void {
@@ -222,10 +251,17 @@ export class UdGameMain extends UdFullView {
         this.setting_btn.removeListener(UdBtnSignal.FingerTap, this.__onSettingTap, this);
         this.record_btn.removeListener(UdBtnSignal.FingerTap, this.__onRecordTap, this);
         this.community_btn.removeListener(UdBtnSignal.FingerTap, this.__onCommunityTap, this);
+        if (this.toggle1) this.toggle1.node.off(cc.Node.EventType.TOUCH_END, this.__onToggle1Tap, this);
+        if (this.toggle1_lb) this.toggle1_lb.node.off(cc.Node.EventType.TOUCH_END, this.__onToggle1Tap, this);
+        if (this.toggle2) this.toggle2.node.off(cc.Node.EventType.TOUCH_END, this.__onToggle2Tap, this);
+        if (this.toggle2_lb) this.toggle2_lb.node.off(cc.Node.EventType.TOUCH_END, this.__onToggle2Tap, this);
     }
 
     public updateView(arg?: any): void {
         super.updateView(arg);
+
+        // 恢复上次选择的模式（默认关卡模式）
+        this.__scoreMode = this.__loadMode();
 
         // parse level config
         this.__rawConfig = [
@@ -252,13 +288,16 @@ export class UdGameMain extends UdFullView {
             // 游戏已结束（结算界面已打开），忽略后续到达的金币
             if (this.__gameEnded) return;
             this.__refreshProgressBar();
-            // 到达通关分数自动结束本局
+            this.__refreshStageLabel();
+            // 到达通关分数自动结束本局（积分模式 passScore 恒为 0，不会触发）
             const cfg = this.__getCurrentLevelConfig();
             if (cfg.passScore > 0 && this.__score >= cfg.passScore) {
                 this.__notifyGameOver(true);
             }
         };
         this.__resetState();
+        this.__applyModeUI();
+        this.__syncToggleVisual();
         this.__enterIdleUI();
         this.__prewarmFruitCache();
         this.__syncTokenDisplay();
@@ -380,6 +419,7 @@ export class UdGameMain extends UdFullView {
         this.__persistTokens(this.__playTokens);
 
         this.__phase = PlayPhase.Running;
+        this.__refreshStageLabel();
         this.preview_info_node.active = false;
         this.title_node.active = false;
         this.add_power_btn.node.active = false;
@@ -575,7 +615,7 @@ export class UdGameMain extends UdFullView {
                         UdCoinFly.spawn(
                             this.eff_node,
                             worldPos,
-                            this.score_lb.node,
+                            this.__getScoreTargetNode(),
                             scorePerCoin,
                             i,
                             coinCount,
@@ -701,14 +741,19 @@ export class UdGameMain extends UdFullView {
 
     private __applyScoreBadge(): void {
         const cfg = this.__getCurrentLevelConfig();
-        this.score_lb.suffix = ` / ${cfg.passScore}`;
+        this.score_lb.suffix = this.__scoreMode ? "" : ` / ${cfg.passScore}`;
         this.score_lb.value = this.__score;
         this.__refreshProgressBar();
+        this.__refreshStageLabel();
         this.__tryHintOnScore();
     }
 
     /** 本局积分变化时尝试触发依赖 minScore 的指引 */
     private __tryHintOnScore(): void {
+        // 积分模式没有"通关分数"概念，不触发分数指引
+        if (this.__scoreMode) {
+            return;
+        }
         if (this.__phase !== PlayPhase.Running) {
             return;
         }
@@ -731,19 +776,113 @@ export class UdGameMain extends UdFullView {
     }
 
     private __getCurrentLevelConfig(): IUdLevelConfig {
+        if (this.__scoreMode) {
+            return SCORE_MODE_LEVEL_CONFIG;
+        }
         if (!this.__levelConfig) {
             this.__levelConfig = getLevelConfig(this.__currentStage);
         }
         return this.__levelConfig;
     }
 
-    /** 根据当前关卡配置刷新 UI（stage_lb / cost_power_lb / score_lb / progress bar） */
+    /** 根据当前模式+关卡配置刷新 UI（stage_lb / cost_power_lb / score_lb / progress bar） */
     private __applyLevelConfig(): void {
         const cfg = this.__getCurrentLevelConfig();
-        this.stage_lb.string = `第${cfg.stage}关`;
         this.cost_power_lb.string = `${cfg.staminaCost}`;
-        this.score_lb.suffix = ` / ${cfg.passScore}`;
+        this.score_lb.suffix = this.__scoreMode ? "" : ` / ${cfg.passScore}`;
+        this.__refreshStageLabel();
         this.__refreshProgressBar();
+    }
+
+    // ==================== MODE SYSTEM ====================
+
+    /** 根据当前模式和游戏阶段刷新 stage_lb 文本 */
+    private __refreshStageLabel(): void {
+        if (!this.__scoreMode) {
+            const cfg = this.__getCurrentLevelConfig();
+            this.stage_lb.string = `第${cfg.stage}关`;
+            return;
+        }
+        const high = this.__loadHighScore();
+        const inGame = this.__phase === PlayPhase.Running
+            || this.__phase === PlayPhase.Spawning
+            || this.__phase === PlayPhase.Finished;
+        if (inGame) {
+            this.stage_lb.string = `历史分数：${high}分\n当前分数：${this.__score}分`;
+        } else {
+            this.stage_lb.string = `历史分数：${high}分`;
+        }
+    }
+
+    /** 根据当前模式控制 stage_lb / passed_pro_bar 父节点显隐 */
+    private __applyModeUI(): void {
+        const stageParent = this.stage_lb.node.parent;
+        const progressParent = this.passed_pro_bar.node.parent;
+        stageParent.active = true;
+        progressParent.active = !this.__scoreMode;
+        this.__applyLevelConfig();
+    }
+
+    /** 同步 toggle 选中状态到当前模式 */
+    private __syncToggleVisual(): void {
+        if (this.toggle1) this.toggle1.isChecked = !this.__scoreMode;
+        if (this.toggle2) this.toggle2.isChecked = this.__scoreMode;
+    }
+
+    /** 切换模式：false=关卡模式，true=积分模式 */
+    private __switchMode(scoreMode: boolean): void {
+        if (this.__scoreMode === scoreMode) {
+            this.__syncToggleVisual();
+            return;
+        }
+        this.__scoreMode = scoreMode;
+        this.__saveMode(scoreMode);
+        this.__syncToggleVisual();
+        // 非待机状态下切换：放弃当前对局（不存档），回到待机界面
+        if (this.__phase !== PlayPhase.Idle) {
+            this.__purgeTimers();
+            this.__resetState();
+            this.__enterIdleUI();
+        }
+        this.__applyModeUI();
+    }
+
+    private __onToggle1Tap(): void {
+        this.__switchMode(false);
+    }
+
+    private __onToggle2Tap(): void {
+        this.__switchMode(true);
+    }
+
+    /** 金币飞向的目标节点：积分模式下分数显示在 stage_lb */
+    private __getScoreTargetNode(): cc.Node {
+        return this.__scoreMode ? this.stage_lb.node : this.score_lb.node;
+    }
+
+    /** 读取上次选择的模式（默认关卡模式） */
+    private __loadMode(): boolean {
+        return cc.sys.localStorage.getItem(UdGameMain.MODE_CACHE_KEY) === "1";
+    }
+
+    /** 记住当前选择的模式 */
+    private __saveMode(scoreMode: boolean): void {
+        cc.sys.localStorage.setItem(UdGameMain.MODE_CACHE_KEY, scoreMode ? "1" : "0");
+    }
+
+    /** 读取积分模式历史最高分 */
+    private __loadHighScore(): number {
+        const raw = cc.sys.localStorage.getItem(UdGameMain.HIGH_SCORE_CACHE_KEY);
+        const val = Number(raw || 0);
+        return Number.isFinite(val) && val >= 0 ? Math.floor(val) : 0;
+    }
+
+    /** 结算历史最高分，返回是否刷新纪录 */
+    private __commitHighScore(): boolean {
+        const high = this.__loadHighScore();
+        if (this.__score <= high) return false;
+        cc.sys.localStorage.setItem(UdGameMain.HIGH_SCORE_CACHE_KEY, `${this.__score}`);
+        return true;
     }
 
     /** 如果本局分数达到通关线，推进到下一关 */
@@ -762,6 +901,8 @@ export class UdGameMain extends UdFullView {
 
     /** 计算进度目标值并启动动画 */
     private __refreshProgressBar(): void {
+        // 积分模式无进度条（父节点已隐藏），跳过动画
+        if (this.__scoreMode) return;
         const cfg = this.__getCurrentLevelConfig();
         const target = cfg.passScore > 0
             ? Math.min(this.__score / cfg.passScore, 1)
@@ -814,8 +955,35 @@ export class UdGameMain extends UdFullView {
     }
 
     private __onTokenAdd(): void {
-        this.__playTokens++;
-        this.__persistTokens(this.__playTokens);
+        if (CC_DEBUG) {
+            this.__playTokens++;
+            this.__persistTokens(this.__playTokens);
+            UdToastHub.Ins.show("体力+1");
+            return;
+        }
+        const _window: any = window;
+        if (cc.sys.platform === cc.sys.WECHAT_GAME
+            && _window.UdPlatform
+            && _window.UdPlatform.openRewardedVideoAd) {
+            _window.UdPlatform.openRewardedVideoAd((params) => {
+                let isEnded = params.isEnded;
+                let fetchFail = params.fetchFail;
+
+                if (fetchFail) {
+                    UdToastHub.Ins.show("获取广告失败，请再试试");
+                } else {
+                    if (isEnded) {
+                        this.__playTokens++;
+                        this.__persistTokens(this.__playTokens);
+                        UdToastHub.Ins.show("体力+1");
+                    } else {
+                        UdToastHub.Ins.show("看完视频可获得体力");
+                    }
+                }
+            });
+        } else {
+            UdToastHub.Ins.show("看完视频可获得体力");
+        }
     }
 
     private __notifyGameOver(enterMainGame: boolean = true): void {
@@ -827,6 +995,9 @@ export class UdGameMain extends UdFullView {
 
         // 在分数重置前检查是否通关并推进关卡
         this.__advanceStageIfNeeded();
+
+        // 积分模式：结算历史最高分
+        const isNewRecord = this.__scoreMode && this.__commitHighScore();
 
         this.__gameEnded = true;
         this.__phase = PlayPhase.Notified;
@@ -844,6 +1015,8 @@ export class UdGameMain extends UdFullView {
             num: displayScore,
             enterMainGame,
             result: isCleared ? 1 : 0,
+            scoreMode: this.__scoreMode,
+            isNewRecord,
             hasNextStage,
             onNextStage: hasNextStage ? () => {
                 this.__autoStartNext = true;
@@ -914,9 +1087,14 @@ export class UdGameMain extends UdFullView {
             || this.__phase === PlayPhase.Finished;
     }
 
+    /** 当前模式的存档 key（两种模式存档相互独立） */
+    private __getSaveKey(): string {
+        return this.__scoreMode ? UdGameMain.GAME_SAVE_SCORE_CACHE_KEY : UdGameMain.GAME_SAVE_CACHE_KEY;
+    }
+
     private __readGameSave(): IUdGameSave | null {
         try {
-            const raw = cc.sys.localStorage.getItem(UdGameMain.GAME_SAVE_CACHE_KEY);
+            const raw = cc.sys.localStorage.getItem(this.__getSaveKey());
             if (raw == null || raw === "") return null;
             const o = JSON.parse(raw) as IUdGameSave;
             if (o == null || o.v !== 1 || !Array.isArray(o.spawnSequence)) return null;
@@ -928,11 +1106,11 @@ export class UdGameMain extends UdFullView {
     }
 
     private __writeGameSave(data: IUdGameSave): void {
-        cc.sys.localStorage.setItem(UdGameMain.GAME_SAVE_CACHE_KEY, JSON.stringify(data));
+        cc.sys.localStorage.setItem(this.__getSaveKey(), JSON.stringify(data));
     }
 
     private __clearSave(): void {
-        cc.sys.localStorage.removeItem(UdGameMain.GAME_SAVE_CACHE_KEY);
+        cc.sys.localStorage.removeItem(this.__getSaveKey());
     }
 
     private __serializeBoard(): IUdGameSave {
@@ -966,6 +1144,7 @@ export class UdGameMain extends UdFullView {
         }
         return {
             v: 1,
+            scoreMode: this.__scoreMode,
             spawnSequence: this.__spawnSequence.slice(),
             dropCount: this.__dropCount,
             score: this.__score,

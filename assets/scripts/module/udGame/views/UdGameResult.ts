@@ -12,6 +12,10 @@ export interface IUdGameScore {
     num?: number;
     enterMainGame: boolean;
     result: number; // 1表示通关
+    /** 积分模式 */
+    scoreMode?: boolean;
+    /** 积分模式是否刷新历史最高分 */
+    isNewRecord?: boolean;
     /** 是否还有下一关可继续 */
     hasNextStage?: boolean;
     /** 点击"下一关"回调 */
@@ -68,7 +72,13 @@ export class UdGameResult extends UdPopPanel {
         // Victory sfx
         UdAudioHub.Ins.playSound(UdAudioDef.CombatWinSfx);
 
-        this.__scoreLabel.prefix = `${data.result ? "通关成功\n" : "通关失败\n"}本局达到`;
+        let resultPrefix: string;
+        if (data.scoreMode) {
+            resultPrefix = data.isNewRecord ? "新纪录！\n本局达到" : "游戏结束\n本局达到";
+        } else {
+            resultPrefix = `${data.result ? "通关成功\n" : "通关失败\n"}本局达到`;
+        }
+        this.__scoreLabel.prefix = resultPrefix;
         this.__scoreLabel.suffix = "分";
         this.__scoreLabel.value = 0;
 
