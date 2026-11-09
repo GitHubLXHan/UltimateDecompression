@@ -26,6 +26,11 @@ class UdPlatform {
         window.urlKV["statusBarHeight"] = 0;
       }
     }
+    
+    wx.showShareMenu({
+      withShareTicket: true,
+      menus: ["shareAppMessage", "shareTimeline"],
+    });
   }
 
   // 打开微信游戏圈
